@@ -38,8 +38,17 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internal\AnonymousSoul.cs" />
+    <Compile Include="Internal\ISoul.cs" />
+    <Compile Include="LifetimeSource.cs" />
+    <Compile Include="DisposableLifetime.cs" />
+    <Compile Include="LifetimeExchanger.cs" />
     <Compile Include="Lifetime.cs" />
+    <Compile Include="LifetimeUtilities.cs" />
+    <Compile Include="Internal\Phase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Internal\MortalSoul.cs" />
+    <Compile Include="Internal\SoulUtils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

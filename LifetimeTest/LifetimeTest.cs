@@ -40,17 +40,17 @@ internal static class LifetimeTestUtil {
 public class LifetimeTest {
     internal static Lifetime LimboedLifetime { get { using (var r = new LimboLife()) return r.Lifetime; } }
     internal sealed class DoomedLife : IDisposable {
-        private readonly Lifetime.Source _source = new Lifetime.Source();
+        private readonly LifetimeSource _source = new LifetimeSource();
         public Lifetime Lifetime { get { return this._source.Lifetime; } }
         public void Dispose() { _source.EndLifetime(); }
     }
     internal sealed class BlessedLife : IDisposable {
-        private readonly Lifetime.Source _source = new Lifetime.Source();
+        private readonly LifetimeSource _source = new LifetimeSource();
         public Lifetime Lifetime { get { return this._source.Lifetime; } }
         public void Dispose() { _source.GiveEternalLifetime(); }
     }
     internal sealed class LimboLife : IDisposable {
-        private Lifetime.Source _source = new Lifetime.Source();
+        private LifetimeSource _source = new LifetimeSource();
         private readonly Lifetime _lifetime;
         public LimboLife() {
             this._lifetime = _source.Lifetime;
@@ -152,7 +152,7 @@ public class LifetimeTest {
 
     [TestMethod]
     public void AllowsForGarbageCollection() {
-        var mortal = new Lifetime.Source();
+        var mortal = new LifetimeSource();
         var whens = new Action<Lifetime, Action, Lifetime>[] {
             (e, a, r) => e.WhenDead(a, r),
             (e, a, r) => e.WhenImmortal(a, r),
