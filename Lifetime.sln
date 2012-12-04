@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lifetime", "Lifetime\Lifetime.csproj", "{C5F0A258-0AA4-4644-AD4B-134811518025}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeTest", "LifetimeTest\LifetimeTest.csproj", "{B448C282-D446-4624-9A42-7B2CCFA517EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{C5F0A258-0AA4-4644-AD4B-134811518025}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5F0A258-0AA4-4644-AD4B-134811518025}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5F0A258-0AA4-4644-AD4B-134811518025}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B448C282-D446-4624-9A42-7B2CCFA517EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B448C282-D446-4624-9A42-7B2CCFA517EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B448C282-D446-4624-9A42-7B2CCFA517EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B448C282-D446-4624-9A42-7B2CCFA517EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
