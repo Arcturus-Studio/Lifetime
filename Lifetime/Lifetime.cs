@@ -7,6 +7,7 @@ namespace TwistedOak.Util {
     /// <summary>
     /// Runs callbacks when transitioning permanently from mortal to either dead or immortal.
     /// The default lifetime is immortal.
+    /// Lifetimes whose source is garbage collected are neither dead nor immortal: they are in mortal limbo and will discard all callbacks.
     /// </summary>
     [DebuggerDisplay("{ToString()}")]
     public struct Lifetime {
@@ -50,6 +51,7 @@ namespace TwistedOak.Util {
         /// </summary>
         public static readonly Lifetime Immortal = default(Lifetime);
         /// <summary>
+        /// NOT the default lifetime.
         /// A lifetime that has already permanently transitioned from mortal to dead.
         /// </summary>
         public static readonly Lifetime Dead = new Lifetime(new Data {Phase = Phase.Dead});
@@ -226,33 +228,47 @@ namespace TwistedOak.Util {
         /// </summary>
         [DebuggerDisplay("{ToString()}")]
         public sealed class Source {
+            /// <summary>The lifetime exposed and managed by the lifetime source.</summary>
             public Lifetime Lifetime { get; private set; }
+            /// <summary>Constructs a new lifetime source with an initially mortal exposed lifetime.</summary>
             public Source() {
                 this.Lifetime = new Lifetime(new Data { Phase = Phase.Mortal });
             }
+            /// <summary>
+            /// Permanently transitions the source's exposed lifetime from mortal to dead.
+            /// No effect when the exposed lifetime is already dead.
+            /// Invalid operation when the exposed lifetime is immortal.
+            /// </summary>
             public void EndLifetime() {
                 GC.SuppressFinalize(this);
                 Lifetime.TransitionPermanently(true);
             }
+            /// <summary>
+            /// Permanently transitions the source's exposed lifetime from mortal to immortal.
+            /// No effect when the exposed lifetime is already immortal.
+            /// Invalid operation when the exposed lifetime is dead.
+            /// </summary>
             public void GiveEternalLifetime() {
                 GC.SuppressFinalize(this);
                 Lifetime.TransitionPermanently(false);
             }
             ~Source() {
-                // well this isn't good... this source was collecteed without setting its lifetime
+                // well this isn't good... this source was collected without setting its lifetime
                 // the lifetime may still be referenced, even though we aren't, but it will never be killed or immortalized
                 // its callbacks will never run: it is in mortal limbo
                 lock (Lifetime._data) {
                     Lifetime._data.Phase = Phase.MortalLimbo;
                     Lifetime._data.Callbacks = null; // can't run these callbacks: their targets may be in an invalid state due to finalization
-                    Data.RunAndClearCallbacks(ref Lifetime._data.LimboSafeCallbacks);
+                    Data.RunAndClearCallbacks(ref Lifetime._data.LimboSafeCallbacks); // cleanup callbacks are allowed, though
                 }
             }
+            ///<summary>Returns a text representation of the lifetime source's current state.</summary>
             public override string ToString() {
                 return Lifetime.ToString();
             }
         }
 
+        ///<summary>Returns a text representation of the lifetime's current state.</summary>
         public override string ToString() {
             return IsImmortal ? "Immortal"
                  : IsDead ? "Dead"
