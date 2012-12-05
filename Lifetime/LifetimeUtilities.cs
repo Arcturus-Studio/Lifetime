@@ -7,33 +7,34 @@ namespace TwistedOak.Util {
         ///<summary>Returns a lifetime that dies when the given lifetime loses its mortality by either dying or becoming immortal.</summary>
         internal static Lifetime Mortality(this Lifetime lifetime) {
             var s = lifetime.Soul;
-            return new Lifetime(new AnonymousSoul(
-                () => {
-                    var p = s.Phase;
-                    if (p == Phase.Immortal) return Phase.Dead;
-                    return p;
-                },
-                s.Register));
+            Func<Phase> mortality = () => {
+                if (s.Phase == Phase.Immortal) return Phase.Dead;
+                return s.Phase;
+            };
+
+            if (s.Phase != Phase.Mortal)
+                return new Lifetime(SoulUtils.PermanentSoul(mortality()));
+
+            return new Lifetime(new AnonymousSoul(mortality, s.Register));
         }
 
         ///<summary>Returns a lifetime that dies when the given lifetime becomes immortal or becomes immortal when the given lifetime dies.</summary>
         internal static Lifetime Opposite(this Lifetime lifetime) {
             var s = lifetime.Soul;
-            return new Lifetime(new AnonymousSoul(
-                () => {
-                    var p = s.Phase;
-                    if (p == Phase.Immortal) return Phase.Dead;
-                    if (p == Phase.Dead) return Phase.Immortal;
-                    return p;
-                },
-                s.Register));
+            Func<Phase> invert = () => {
+                if (s.Phase == Phase.Immortal) return Phase.Dead;
+                if (s.Phase == Phase.Dead) return Phase.Immortal;
+                return s.Phase;
+            };
+
+            if (s.Phase != Phase.Mortal) 
+                return new Lifetime(SoulUtils.PermanentSoul(invert()));
+            
+            return new Lifetime(new AnonymousSoul(invert, s.Register));
         }
 
         ///<summary>Returns a lifetime that dies when either of the given lifetimes dies or becomes immortal when both of the given lifetimes become immortal.</summary>
         public static Lifetime Min(this Lifetime lifetime1, Lifetime lifetime2) {
-            if (lifetime1.IsImmortal || lifetime2.IsDead) return lifetime2;
-            if (lifetime2.IsImmortal || lifetime1.IsDead) return lifetime1;
-
             var s1 = lifetime1.Soul;
             var s2 = lifetime2.Soul;
             Func<Phase> minPhase = () => {
@@ -44,6 +45,10 @@ namespace TwistedOak.Util {
                 if (p1 == Phase.Limbo || p2 == Phase.Limbo) return Phase.Limbo;
                 return Phase.Immortal;
             };
+            
+            if (minPhase() != Phase.Mortal)
+                return new Lifetime(SoulUtils.PermanentSoul(minPhase()));
+
             return new Lifetime(new AnonymousSoul(
                 minPhase,
                 action => {

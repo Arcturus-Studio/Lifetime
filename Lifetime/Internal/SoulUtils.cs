@@ -5,18 +5,24 @@ namespace TwistedOak.Util {
     internal static class SoulUtils {
         public static readonly RegistrationRemover EmptyRemover = () => { };
 
-        public static readonly ISoul ImmortalSoul = new AnonymousSoul(
-            () => Phase.Immortal,
-            action => {
-                action();
-                return EmptyRemover;
-            });
-        public static readonly ISoul DeadSoul = new AnonymousSoul(
-            () => Phase.Dead,
-            action => {
-                action();
-                return EmptyRemover;
-            });
+        private static ISoul MakePermanentSoul(Phase phase) {
+            return new AnonymousSoul(
+                () => phase,
+                action => {
+                    action();
+                    return EmptyRemover;
+                });
+        }
+        public static readonly ISoul ImmortalSoul = MakePermanentSoul(Phase.Immortal);
+        public static readonly ISoul DeadSoul = MakePermanentSoul(Phase.Dead);
+        public static readonly ISoul LimboSoul = MakePermanentSoul(Phase.Limbo);
+
+        public static ISoul PermanentSoul(Phase phase) {
+            if (phase == Phase.Dead) return DeadSoul;
+            if (phase == Phase.Immortal) return ImmortalSoul;
+            if (phase == Phase.Limbo) return LimboSoul;
+            throw new ArgumentOutOfRangeException("phase");
+        }
 
         public static RegistrationRemover InterdependentRegister(ISoul soul1, Func<bool> tryComplete1, ISoul soul2, Func<bool> tryComplete2) {
             if (soul1 == null) throw new ArgumentNullException("soul1");
