@@ -13,20 +13,24 @@ namespace TwistedOak.Util {
             Phase = Phase.Mortal;
         }
 
+        public void TransitionPermanently(Phase newPhase) {
+            if (!TryTransitionPermanently(newPhase))
+                throw new InvalidOperationException(String.Format("Can't transition from {0} to {1}", Phase, newPhase));
+        }
         /// <summary>
         /// Permanentaly transitions this lifetime to be either dead or immortal.
         /// No effect if already transitioned to the desired state.
         /// Invalid operation if already transitioned to another state.
         /// </summary>
-        public void TransitionPermanently(Phase newPhase) {
+        public bool TryTransitionPermanently(Phase newPhase) {
             if (newPhase == Phase.Mortal) throw new ArgumentOutOfRangeException("newPhase");
             DoublyLinkedNode<Action> callbacks;
             lock (this) {
                 // transition
                 if (Phase == newPhase)
-                    return;
+                    return true;
                 if (Phase != Phase.Mortal)
-                    throw new InvalidOperationException(String.Format("Can't transition from {0} to {1}", Phase, newPhase));
+                    return false;
                 Phase = newPhase;
 
                 // callbacks
@@ -36,6 +40,7 @@ namespace TwistedOak.Util {
             if (callbacks != null)
                 foreach (var callback in callbacks.EnumerateOthers())
                     callback.Invoke();
+            return true;
         }
 
         /// <summary>
@@ -44,13 +49,16 @@ namespace TwistedOak.Util {
         /// Runs the given action synchronously and returns null if this lifetime is already immortal or dead.
         /// </summary>
         public Action Register(Action action) {
+            if (action == null) return null;
+
             // quick check for already finished
             if (Phase != Phase.Mortal) {
                 action();
                 return null;
             }
 
-            DoublyLinkedNode<Action> node;
+            // hold a weak reference to the node, to ensure it can be collected after the this soul becomes non-mortal
+            WeakReference weakNode;
             lock (this) {
                 // safe check for already finished
                 if (Phase != Phase.Mortal) {
@@ -60,13 +68,12 @@ namespace TwistedOak.Util {
 
                 // add callback for when finished
                 if (_callbacks == null) _callbacks = DoublyLinkedNode<Action>.CreateEmptyCycle();
-                node = _callbacks.Prepend(action);
+                weakNode = new WeakReference(_callbacks.Prepend(action));
             }
 
-            // return the 'cleanup' action that removes the registration
-            var w = new WeakReference(node); // prevent user holding onto the returned action from extending the lifetime of closed over objects
+            // cleanup action that removes the registration
             return () => {
-                var n = (DoublyLinkedNode<Action>)w.Target;
+                var n = (DoublyLinkedNode<Action>)weakNode.Target;
                 if (n != null) n.Unlink();
             };
         }

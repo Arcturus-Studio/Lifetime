@@ -51,18 +51,5 @@ namespace TwistedOak.Util {
             });
             cancelBackOnSecondCall();
         }
-
-        public static void WhenPhase(this ISoul lifetime, Action action, Phase phase, ISoul registrationLifetime) {
-            if (action == null) throw new ArgumentNullException("action");
-            lifetime.WhenNotMortal(
-                () => { if (lifetime.Phase == phase) action(); },
-                registrationLifetime);
-        }
-        public static void WhenDead(this ISoul lifetime, Action action, ISoul registrationLifetime) {
-            WhenPhase(lifetime, action, Phase.Dead, registrationLifetime);
-        }
-        public static void WhenImmortal(this ISoul lifetime, Action action, ISoul registrationLifetime) {
-            WhenPhase(lifetime, action, Phase.Immortal, registrationLifetime);
-        }
     }
 }
