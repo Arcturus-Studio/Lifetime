@@ -27,11 +27,11 @@ namespace TwistedOak.Util {
         }
 
         /// <summary>Determines if this lifetime has not yet permanently transitioned from mortal to immortal or dead.</summary>
-        public bool IsMortal { get { return Soul.Phase.IsMortal(); } }
+        public bool IsMortal { get { return Soul.Phase == Phase.Mortal || Soul.Phase == Phase.Limbo; } }
         /// <summary>Determines if this lifetime has permanently transitioned from mortal to immortal.</summary>
-        public bool IsImmortal { get { return Soul.Phase.IsImmortal(); } }
+        public bool IsImmortal { get { return Soul.Phase == Phase.Immortal; } }
         /// <summary>Determines if this lifetime has permanently transitioned from mortal to dead.</summary>
-        public bool IsDead { get { return Soul.Phase.IsDead(); } }
+        public bool IsDead { get { return Soul.Phase == Phase.Dead; } }
 
         /// <summary>
         /// Registers an action to perform when this lifetime is either dead or immortal.
@@ -39,7 +39,10 @@ namespace TwistedOak.Util {
         /// </summary>
         public void WhenNotMortal(Action action, Lifetime registrationLifetime = default(Lifetime)) {
             if (action == null) throw new ArgumentNullException("action");
-            Soul.WhenNotMortal(action, registrationLifetime.Soul);
+            var s = Soul;
+            Soul.WhenNotMortal(
+                () => { if (s.Phase != Phase.Limbo) action(); },
+                registrationLifetime.Soul);
         }
 
         /// <summary>
@@ -62,10 +65,7 @@ namespace TwistedOak.Util {
 
         ///<summary>Returns a text representation of the lifetime's current state.</summary>
         public override string ToString() {
-            return IsImmortal ? "Immortal"
-                 : IsDead ? "Dead"
-                 : this.Soul.Phase == Phase.MortalLimbo ? "Alive (Limbo)"
-                 : "Alive";
+            return Soul.Phase.ToString();
         }
     }
 }

@@ -32,7 +32,7 @@ namespace TwistedOak.Util {
         }
 
         ~LifetimeSource() {
-            _soul.TransitionPermanently(Phase.MortalLimbo);
+            _soul.TransitionPermanently(Phase.Limbo);
         }
 
         ///<summary>Returns a text representation of the lifetime source's current state.</summary>

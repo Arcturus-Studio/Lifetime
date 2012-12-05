@@ -11,6 +11,6 @@
         /// Callbacks will not be run, because what they reference may have been finalized.
         /// The lifetime will never be killed or immortalized: it is stuck between the two states.
         /// </summary>
-        MortalLimbo
+        Limbo
     }
 }

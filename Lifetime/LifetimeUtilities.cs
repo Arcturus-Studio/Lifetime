@@ -11,24 +11,23 @@ namespace TwistedOak.Util {
                     if (p == Phase.Immortal) return Phase.Dead;
                     return p;
                 },
-                lifetime.Soul.WhenNotMortal,
                 lifetime.Soul.Register));
         }
 
         ///<summary>Returns a lifetime that dies when the given lifetime becomes immortal or becomes immortal when the given lifetime dies.</summary>
         internal static Lifetime Opposite(this Lifetime lifetime) {
+            var s = lifetime.Soul;
             return new Lifetime(new AnonymousSoul(
                 () => {
-                    var p = lifetime.Soul.Phase;
+                    var p = s.Phase;
                     if (p == Phase.Immortal) return Phase.Dead;
                     if (p == Phase.Dead) return Phase.Immortal;
                     return p;
                 },
-                lifetime.Soul.WhenNotMortal,
-                lifetime.Soul.Register));
+                s.Register));
         }
 
-        ///<summary>Returns a lifetime that dies when either of the given lifetimes dies or becomes immortal when both of the given lifetimes become immortal.</summary>
+        /////<summary>Returns a lifetime that dies when either of the given lifetimes dies or becomes immortal when both of the given lifetimes become immortal.</summary>
         //public static Lifetime Min(this Lifetime lifetime1, Lifetime lifetime2) {
         //    if (lifetime1.IsImmortal || lifetime2.IsDead) return lifetime2;
         //    if (lifetime2.IsImmortal || lifetime1.IsDead) return lifetime1;
@@ -40,25 +39,25 @@ namespace TwistedOak.Util {
         //        var p2 = s2.Phase;
         //        if (p1 == Phase.Dead || p2 == Phase.Dead) return Phase.Dead;
         //        if (p1 == Phase.Mortal || p2 == Phase.Mortal) return Phase.Mortal;
-        //        if (p1 == Phase.MortalLimbo || p2 == Phase.MortalLimbo) return Phase.MortalLimbo;
+        //        if (p1 == Phase.Limbo || p2 == Phase.Limbo) return Phase.Limbo;
         //        return Phase.Immortal;
         //    };
         //    return new Lifetime(new AnonymousSoul(
         //        g,
-        //        (action, registrationLifetime) => {
+        //        (action, registrationLifetime, isLimboSafe) => {
         //            var subLife = new LifetimeSource();
         //            var s = subLife.Lifetime.Soul;
         //            registrationLifetime.WhenDead(subLife.EndLifetime, s);
         //            Action a = () => {
         //                var p = g();
         //                if (!p.IsMortal())
-        //                action();
+        //                    action();
         //                subLife.EndLifetime();
         //            };
 
         //            // dead if either dies
-        //            s1.WhenNotMortal(a, s);
-        //            s2.WhenNotMortal(a, s);
+        //            s1.WhenNotMortal(a, s, false);
+        //            s2.WhenNotMortal(a, s, false);
         //            // immortal if both become immortal
         //            s1.WhenImmortal(() => s2.WhenImmortal(a, s), s);
         //        }));
