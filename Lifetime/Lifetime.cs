@@ -27,11 +27,11 @@ namespace TwistedOak.Util {
         }
 
         /// <summary>Determines if this lifetime has not yet permanently transitioned from mortal to immortal or dead.</summary>
-        public bool IsMortal { get { return Soul.IsMortal(); } }
+        public bool IsMortal { get { return Soul.Phase.IsMortal(); } }
         /// <summary>Determines if this lifetime has permanently transitioned from mortal to immortal.</summary>
-        public bool IsImmortal { get { return Soul.IsImmortal(); } }
+        public bool IsImmortal { get { return Soul.Phase.IsImmortal(); } }
         /// <summary>Determines if this lifetime has permanently transitioned from mortal to dead.</summary>
-        public bool IsDead { get { return Soul.IsDead(); } }
+        public bool IsDead { get { return Soul.Phase.IsDead(); } }
 
         /// <summary>
         /// Registers an action to perform when this lifetime is either dead or immortal.

@@ -5,7 +5,7 @@ namespace TwistedOak.Util {
         public static readonly ISoul ImmortalSoul = new AnonymousSoul(
             () => Phase.Immortal,
             (action, registrationLifetime) => {
-                if (!registrationLifetime.IsDead())
+                if (!registrationLifetime.Phase.IsDead())
                     action();
             },
             (action, isLimboSafe) => {
@@ -15,7 +15,7 @@ namespace TwistedOak.Util {
         public static readonly ISoul DeadSoul = new AnonymousSoul(
             () => Phase.Dead,
             (action, registrationLifetime) => {
-                if (!registrationLifetime.IsDead())
+                if (!registrationLifetime.Phase.IsDead())
                     action();
             },
             (action, isLimboSafe) => {
@@ -27,23 +27,23 @@ namespace TwistedOak.Util {
             return phase == Phase.Mortal || phase == Phase.MortalLimbo;
         }
         public static bool IsDead(this Phase phase) {
-            return soul.Phase == Phase.Dead;
+            return phase == Phase.Dead;
         }
         public static bool IsImmortal(this Phase phase) {
-            return soul.Phase == Phase.Immortal;
+            return phase == Phase.Immortal;
         }
 
         public static void WhenDead(this ISoul lifetime, Action action, ISoul registrationLifetime) {
             if (action == null) throw new ArgumentNullException("action");
             lifetime.WhenNotMortal(
-                () => { if (lifetime.IsDead()) action(); },
+                () => { if (lifetime.Phase.IsDead()) action(); },
                 registrationLifetime);
         }
 
         public static void WhenImmortal(this ISoul lifetime, Action action, ISoul registrationLifetime) {
             if (action == null) throw new ArgumentNullException("action");
             lifetime.WhenNotMortal(
-                () => { if (lifetime.IsImmortal()) action(); },
+                () => { if (lifetime.Phase.IsImmortal()) action(); },
                 registrationLifetime);
         }
     }

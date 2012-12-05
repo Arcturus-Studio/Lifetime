@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Linq;
 
 namespace TwistedOak.Util {
     internal sealed class MortalSoul : ISoul {
@@ -7,9 +8,9 @@ namespace TwistedOak.Util {
         /// Callbacks to run when the lifetime is killed, immortalized, or enters limbo because its source was finalized.
         /// Used for cleanup actions that have no externally visible effects other than allowing garbage collection.
         /// </summary>
-        private event Action LimboSafeCallbacks;
+        private DoublyLinkedNode<Action> _limboSafeCallbacks;
         ///<summary>Callbacks to run when the lifetime is killed or immortalized.</summary>
-        private event Action Callbacks;
+        private DoublyLinkedNode<Action> _callbacks;
         ///<summary>The current state of the lifetime.</summary>
         public Phase Phase { get; private set; }
         
@@ -24,7 +25,8 @@ namespace TwistedOak.Util {
         /// </summary>
         public void TransitionPermanently(Phase newPhase) {
             if (newPhase == Phase.Mortal) throw new ArgumentOutOfRangeException("newPhase");
-            Action ev;
+            DoublyLinkedNode<Action> ev1;
+            DoublyLinkedNode<Action> ev2;
             lock (this) {
                 // transition
                 if (Phase == newPhase)
@@ -34,13 +36,13 @@ namespace TwistedOak.Util {
                 Phase = newPhase;
 
                 // callbacks
-                ev = newPhase == Phase.MortalLimbo
-                   ? LimboSafeCallbacks // can't run all callbacks when finalizing: targets may be in an invalid state due to finalization
-                   : Callbacks + LimboSafeCallbacks;
-                Callbacks = null;
-                LimboSafeCallbacks = null;
+                ev1 = newPhase != Phase.MortalLimbo ? _callbacks : null; // can't run these when finalizing: targets may be in an invalid state due to finalization
+                ev2 = _limboSafeCallbacks;
+                _callbacks = null;
+                _limboSafeCallbacks = null;
             }
-            if (ev != null) ev();
+            foreach (var callback in new[] {ev1, ev2}.Where(e => e != null).SelectMany(e => e.EnumerateOthers()))
+                callback.Invoke();
         }
 
         /// <summary>
@@ -50,11 +52,12 @@ namespace TwistedOak.Util {
         /// </summary>
         public Action Register(Action action, bool isLimboSafe) {
             // quick check for already finished
-            if (!this.IsMortal()) {
+            if (!Phase.IsMortal()) {
                 action();
                 return null;
             }
 
+            DoublyLinkedNode<Action> node;
             lock (this) {
                 // check for limbo
                 if (Phase == Phase.MortalLimbo) {
@@ -70,36 +73,33 @@ namespace TwistedOak.Util {
 
                 // add callback for when finished
                 if (isLimboSafe) {
-                    LimboSafeCallbacks += action;
+                    if (_limboSafeCallbacks == null) _limboSafeCallbacks = DoublyLinkedNode<Action>.CreateEmptyCycle();
+                    node = _limboSafeCallbacks.Prepend(action);
                 } else {
-                    Callbacks += action;
+                    if (_callbacks == null) _callbacks =  DoublyLinkedNode<Action>.CreateEmptyCycle();
+                    node = _callbacks.Prepend(action);
                 }
             }
 
             // return the 'cleanup' action that removes the registration
-            var w = new WeakReference(action); // prevent user holding onto the returned action from extending the lifetime of closed over objects
+            var w = new WeakReference(node); // prevent user holding onto the returned action from extending the lifetime of closed over objects
             return () => {
-                var a = (Action)w.Target;
-                if (a == null) return;
-                if (isLimboSafe) {
-                    LimboSafeCallbacks -= a;
-                } else {
-                    Callbacks -= a;
-                }
+                var n = (DoublyLinkedNode<Action>)w.Target;
+                if (n != null) n.Unlink();
             };
         }
 
         public void WhenNotMortal(Action action, ISoul registrationLifetime) {
             // avoid complicated setup when possible
-            if (registrationLifetime.IsDead()) return;
-            if (registrationLifetime.IsImmortal() || !this.IsMortal()) {
+            if (registrationLifetime.Phase.IsDead()) return;
+            if (registrationLifetime.Phase.IsImmortal() || !Phase.IsMortal()) {
                 Register(action, isLimboSafe: false);
                 return;
             }
 
             // when the subscription lifetime is THIS lifetime (and both are mortal), just assume it dies afterwards
-            if (!this.IsImmortal() && ReferenceEquals(this, registrationLifetime))
-                registrationLifetime = ImmortalSoul.Instance;
+            if (!Phase.IsImmortal() && ReferenceEquals(this, registrationLifetime))
+                registrationLifetime = SoulUtils.ImmortalSoul;
 
             // *very carefully* setup the registrations so that they clean each other up
             Action cancelBack = null;
@@ -111,7 +111,7 @@ namespace TwistedOak.Util {
             var cancel1 = Register(action, isLimboSafe: false);
             var cancel2 = Register(cancelBackOnSecondCall, isLimboSafe: true);
             cancelBack = registrationLifetime.Register(() => {
-                if (!registrationLifetime.IsDead()) return;
+                if (!registrationLifetime.Phase.IsDead()) return;
                 if (cancel1 != null) cancel1();
                 if (cancel2 != null) cancel2();
             }, isLimboSafe: true);
