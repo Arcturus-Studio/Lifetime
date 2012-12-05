@@ -40,7 +40,7 @@ namespace TwistedOak.Util {
         public void WhenNotMortal(Action action, Lifetime registrationLifetime = default(Lifetime)) {
             if (action == null) throw new ArgumentNullException("action");
             var s = Soul;
-            Soul.WhenNotMortal(
+            Soul.DependentRegister(
                 () => { if (s.Phase != Phase.Limbo) action(); },
                 registrationLifetime.Soul);
         }
@@ -52,7 +52,7 @@ namespace TwistedOak.Util {
         public void WhenDead(Action action, Lifetime registrationLifetime = default(Lifetime)) {
             if (action == null) throw new ArgumentNullException("action");
             var s = Soul;
-            Soul.WhenNotMortal(
+            Soul.DependentRegister(
                 () => { if (s.Phase == Phase.Dead) action(); },
                 registrationLifetime.Soul);
         }
@@ -64,7 +64,7 @@ namespace TwistedOak.Util {
         public void WhenImmortal(Action action, Lifetime registrationLifetime = default(Lifetime)) {
             if (action == null) throw new ArgumentNullException("action");
             var s = Soul;
-            Soul.WhenNotMortal(
+            Soul.DependentRegister(
                 () => { if (s.Phase == Phase.Immortal) action(); },
                 registrationLifetime.Soul);
         }

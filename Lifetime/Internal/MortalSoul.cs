@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading;
-using System.Linq;
 
 namespace TwistedOak.Util {
     internal sealed class MortalSoul : ISoul {
@@ -48,13 +46,11 @@ namespace TwistedOak.Util {
         /// The returned action will remove the registration if invoked before this lifetime becomes immortal or dead.
         /// Runs the given action synchronously and returns null if this lifetime is already immortal or dead.
         /// </summary>
-        public Action Register(Action action) {
-            if (action == null) return null;
-
+        public RegistrationRemover Register(Action action) {
             // quick check for already finished
             if (Phase != Phase.Mortal) {
                 action();
-                return null;
+                return SoulUtils.EmptyRemover;
             }
 
             // hold a weak reference to the node, to ensure it can be collected after the this soul becomes non-mortal
@@ -63,7 +59,7 @@ namespace TwistedOak.Util {
                 // safe check for already finished
                 if (Phase != Phase.Mortal) {
                     action();
-                    return null;
+                    return SoulUtils.EmptyRemover;
                 }
 
                 // add callback for when finished

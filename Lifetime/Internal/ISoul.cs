@@ -1,8 +1,9 @@
 ﻿using System;
 
 namespace TwistedOak.Util {
+    internal delegate void RegistrationRemover();
     internal interface ISoul {
         Phase Phase { get; }
-        Action Register(Action action);
+        RegistrationRemover Register(Action action);
     }
 }
