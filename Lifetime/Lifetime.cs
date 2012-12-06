@@ -7,7 +7,7 @@ namespace TwistedOak.Util {
     /// <summary>
     /// Runs callbacks when transitioning permanently from mortal to either dead or immortal.
     /// The default lifetime is immortal.
-    /// Lifetimes whose source is garbage collected are in limbo, meaning they are neither mortal nor dead nor immortal.
+    /// Lifetimes whose source is garbage collected are immortal.
     /// </summary>
     [DebuggerDisplay("{ToString()}")]
     public struct Lifetime : IEquatable<Lifetime> {
@@ -30,9 +30,9 @@ namespace TwistedOak.Util {
 
         /// <summary>Determines if this lifetime is still transiently mortal.</summary>
         public bool IsMortal { get { return Soul.Phase == Phase.Mortal; } }
-        /// <summary>Determines if this lifetime has permanently transitioned from mortal to immortal.</summary>
+        /// <summary>Determines if this lifetime is permanently immortal.</summary>
         public bool IsImmortal { get { return Soul.Phase == Phase.Immortal; } }
-        /// <summary>Determines if this lifetime has permanently transitioned from mortal to dead.</summary>
+        /// <summary>Determines if this lifetime is permanently dead.</summary>
         public bool IsDead { get { return Soul.Phase == Phase.Dead; } }
 
         /// <summary>
@@ -52,7 +52,6 @@ namespace TwistedOak.Util {
         /// Mortal lifetimes are only congruent if they have the same source.
         /// All immortal lifetimes are congruent.
         /// All dead lifetimes are congruent.
-        /// All lifetimes in limbo are congruent.
         /// Two initially non-congruent lifetimes can become congruent by ending up in the same non-mortal state.
         /// </summary>
         public bool IsCongruentTo(Lifetime other) {
