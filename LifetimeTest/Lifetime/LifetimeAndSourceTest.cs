@@ -85,11 +85,9 @@ public class LifetimeAndSourceTest {
         // mortals are not congruent or equal
         var s1 = new LifetimeSource();
         var s2 = new LifetimeSource();
-        var x = LimboedLifetime;
         var a = new Func<Lifetime>[] {
             () => Lifetime.Immortal, 
             () => Lifetime.Dead,
-            () => x,
             () => s1.Lifetime,
             () => s2.Lifetime
         };
@@ -109,73 +107,66 @@ public class LifetimeAndSourceTest {
 
     [TestMethod]
     public void Status() {
+        // status of constants
+        Lifetime.Immortal.IsMortal.AssertIsFalse();
         Lifetime.Immortal.IsImmortal.AssertIsTrue();
         Lifetime.Immortal.IsDead.AssertIsFalse();
+        Lifetime.Dead.IsMortal.AssertIsFalse();
         Lifetime.Dead.IsImmortal.AssertIsFalse();
         Lifetime.Dead.IsDead.AssertIsTrue();
+        
+        // state before transition
+        var mortal = new LifetimeSource();
+        mortal.Lifetime.IsMortal.AssertIsTrue();
+        mortal.Lifetime.IsImmortal.AssertIsFalse();
+        mortal.Lifetime.IsDead.AssertIsFalse();
 
         // transition to dead
         var doomed = new LifetimeSource();
-        doomed.Lifetime.IsImmortal.AssertIsFalse();
-        doomed.Lifetime.IsDead.AssertIsFalse();
         doomed.EndLifetime();
+        doomed.Lifetime.IsMortal.AssertIsFalse();
         doomed.Lifetime.IsImmortal.AssertIsFalse();
         doomed.Lifetime.IsDead.AssertIsTrue();
 
         // transition to immortal
         var blessed = new LifetimeSource();
-        blessed.Lifetime.IsImmortal.AssertIsFalse();
-        blessed.Lifetime.IsDead.AssertIsFalse();
         blessed.ImmortalizeLifetime();
+        blessed.Lifetime.IsMortal.AssertIsFalse();
         blessed.Lifetime.IsImmortal.AssertIsTrue();
         blessed.Lifetime.IsDead.AssertIsFalse();
 
-        // transition to limbo
-        var limbod = new LimboLife();
-        limbod.Lifetime.IsImmortal.AssertIsFalse();
-        limbod.Lifetime.IsDead.AssertIsFalse();
-        limbod.Dispose();
+        // transition to immortal via limbo
+        var limbo = new LimboLife();
+        limbo.Dispose();
         GC.Collect();
-        limbod.Lifetime.IsImmortal.AssertIsFalse();
-        limbod.Lifetime.IsDead.AssertIsFalse();
+        limbo.Lifetime.IsMortal.AssertIsFalse();
+        limbo.Lifetime.IsImmortal.AssertIsTrue();
+        limbo.Lifetime.IsDead.AssertIsFalse();
     }
 
     [TestMethod]
     public void WhenSet() {
-        WhenSetHelper(e => e.WhenImmortalTask(), false, true);
-        WhenSetHelper(e => e.WhenDeadTask(), true, false);
-        WhenSetHelper(e => e.WhenDeadOrImmortalTask(), true, true);
-    }
-    private static void WhenSetHelper(Func<Lifetime, Task> func, bool whenDead, bool whenImmortal) {
         // called when immortal?
         var blessed = new LifetimeSource();
-        var preBlessedLife = func(blessed.Lifetime);
+        var preBlessedLife = blessed.Lifetime.WhenDeadTask();
         blessed.ImmortalizeLifetime();
         var bt = new[] {
-            func(Lifetime.Immortal),
-            func(blessed.Lifetime),
+            Lifetime.Immortal.WhenDeadTask(),
+            blessed.Lifetime.WhenDeadTask(),
             preBlessedLife
         };
-        if (whenImmortal) {
-            Task.WhenAll(bt).AssertRanToCompletion();
-        } else {
-            Task.WhenAny(bt).AssertNotCompleted();
-        }
+        Task.WhenAny(bt).AssertNotCompleted();
 
         // called when dead?
         var doomed = new LifetimeSource();
-        var preDoomedLife = func(doomed.Lifetime);
+        var preDoomedLife = doomed.Lifetime.WhenDeadTask();
         doomed.EndLifetime();
         var dt = new[] {
             preDoomedLife, 
-            func(doomed.Lifetime),
-            func(Lifetime.Dead)
+            doomed.Lifetime.WhenDeadTask(),
+            Lifetime.Dead.WhenDeadTask()
         };
-        if (whenDead) {
-            Task.WhenAll(dt).AssertRanToCompletion();
-        } else {
-            Task.WhenAny(dt).AssertNotCompleted();
-        }
+        Task.WhenAll(dt).AssertRanToCompletion();
 
         // never called from limbo
         var limboed = new LimboLife();
@@ -183,18 +174,13 @@ public class LifetimeAndSourceTest {
         limboed.Dispose();
         Task.WhenAny(
             preLimboLife,
-            func(limboed.Lifetime)
+            limboed.Lifetime.WhenDeadTask()
         ).AssertNotCompleted();
     }
 
     [TestMethod]
     public void AllowsForGarbageCollection() {
         var mortal = new LifetimeSource();
-        var whens = new Action<Lifetime, Action, Lifetime>[] {
-            (e, a, r) => e.WhenDead(a, r),
-            (e, a, r) => e.WhenImmortal(a, r),
-            (e, a, r) => e.WhenDeadOrImmortal(a, r)
-        };
         var lifes = new[] {
             Lifetime.Immortal,
             Lifetime.Dead,
@@ -203,30 +189,26 @@ public class LifetimeAndSourceTest {
 
         // callbacks are not kept when the lifetime is not mortal
         var f = ValidCallbackMaker;
-        foreach (var when in whens) {
-            foreach (var life in lifes) {
-                // pre-finished
-                f.AssertCollectedAfter(e => when(Lifetime.Immortal, e, life));
-                f.AssertCollectedAfter(e => when(Lifetime.Dead, e, life));
-                f.AssertCollectedAfter(e => when(LimboedLifetime, e, life));
+        foreach (var life in lifes) {
+            // pre-finished
+            f.AssertCollectedAfter(e => Lifetime.Immortal.WhenDead(e, life));
+            f.AssertCollectedAfter(e => Lifetime.Dead.WhenDead(e, life));
+            f.AssertCollectedAfter(e => LimboedLifetime.WhenDead(e, life));
                 
-                // post-finished
-                f.AssertCollectedAfter(e => { using (var limbod = new LimboLife()) when(limbod.Lifetime, e, life); });
-                f.AssertCollectedAfter(e => { using (var blessed = new BlessedLife()) when(blessed.Lifetime, e, life); });
-                f.AssertCollectedAfter(e => { using (var doomed = new DoomedLife()) when(doomed.Lifetime, e, life); });
-            }
+            // post-finished
+            f.AssertCollectedAfter(e => { using (var limbod = new LimboLife()) limbod.Lifetime.WhenDead(e, life); });
+            f.AssertCollectedAfter(e => { using (var blessed = new BlessedLife()) blessed.Lifetime.WhenDead(e, life); });
+            f.AssertCollectedAfter(e => { using (var doomed = new DoomedLife()) doomed.Lifetime.WhenDead(e, life); });
         }
 
         // callbacks are not kept when the subscription lifetime is dead or dies
-        foreach (var when in whens) {
-            f.AssertCollectedAfter(e => { using (var doomed = new DoomedLife()) when(mortal.Lifetime, e, doomed.Lifetime); });
-            f.AssertCollectedAfter(e => when(mortal.Lifetime, e, Lifetime.Dead));
-        }
+        f.AssertCollectedAfter(e => { using (var doomed = new DoomedLife()) mortal.Lifetime.WhenDead(e, doomed.Lifetime); });
+        f.AssertCollectedAfter(e => mortal.Lifetime.WhenDead(e, Lifetime.Dead));
 
         // callbacks are kept when the lifetime is mortal and the subscription lifetime does not die
-        foreach (var when in whens) {
-            f.AssertNotCollectedAfter(e => when(mortal.Lifetime, e, Lifetime.Immortal));
-            f.AssertNotCollectedAfter(e => when(mortal.Lifetime, e, mortal.Lifetime));
-        }
+        f.AssertNotCollectedAfter(e => mortal.Lifetime.WhenDead(e, Lifetime.Immortal));
+        f.AssertNotCollectedAfter(e => mortal.Lifetime.WhenDead(e, mortal.Lifetime));
+
+        GC.KeepAlive(mortal);
     }
 }

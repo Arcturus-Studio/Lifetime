@@ -6,7 +6,7 @@ namespace TwistedOak.Util {
     /// <summary>
     /// Controls the fate of an exposed lifetime.
     /// The exposed lifetime dies or becomes immortal when the EndLifetime or ImmortalizeLifetime methods are called, respectively.
-    /// When a source is garbage collected without killing or immortalizing its exposed lifetime, the exposed lifetime becomes stuck in mortal limbo.
+    /// When a source is garbage collected without killing or immortalizing its exposed lifetime, the exposed lifetime becomes immortal.
     /// </summary>
     [DebuggerDisplay("{ToString()}")]
     public sealed class LifetimeSource {
@@ -39,9 +39,9 @@ namespace TwistedOak.Util {
             _soul.TransitionPermanently(Phase.Immortal);
         }
 
-        ///<summary>Permanently transitions the source's exposed lifetime from mortal to limbo.</summary>
+        ///<summary>Permanently transitions the source's exposed lifetime from mortal to immortal.</summary>
         ~LifetimeSource() {
-            _soul.TransitionPermanently(Phase.Limbo);
+            _soul.TransitionPermanently(Phase.Immortal);
         }
 
         ///<summary>Returns a text representation of the lifetime source's current state.</summary>

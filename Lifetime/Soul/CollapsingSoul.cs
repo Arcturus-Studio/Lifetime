@@ -18,18 +18,18 @@ namespace TwistedOak.Util.Soul {
         }
 
         private Phase TryOptimize() {
-            var phase = this._subSoul.Phase;
-            if (this._collapsed) return phase; // already optimized
+            var phase = _subSoul.Phase;
+            if (_collapsed) return phase; // already optimized
             if (phase == Phase.Mortal) return phase; // can't optimize yet
 
             // the following is idempotent, so it's fine if multiple writers race
-            this._collapsed = true;
-            this._subSoul = this.Phase.AsPermanentSoul();
+            _collapsed = true;
+            _subSoul = Phase.AsPermanentSoul();
             return phase;
         }
         public Phase Phase { get { return TryOptimize(); } }
         public RegistrationRemover Register(Action action) {
-            return this._subSoul.Register(action);
+            return _subSoul.Register(action);
         }
     }
 }

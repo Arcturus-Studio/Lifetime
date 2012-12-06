@@ -1,7 +1,7 @@
 using System.Threading;
 
 namespace TwistedOak.Util {
-    ///<summary>Creates lifetimes when requested, ending them when the next lifetime is requested.</summary>
+    ///<summary>Creates lifetimes when requested, setting them when the next lifetime is requested.</summary>
     public sealed class LifetimeExchanger {
         private LifetimeSource _active;
         
@@ -26,6 +26,7 @@ namespace TwistedOak.Util {
             var prev = Interlocked.Exchange(ref _active, null);
             if (prev != null) prev.EndLifetime();
         }
+
         ///<summary>Gives eternal life to the previously created lifetime (if any).</summary>
         public void ImmortalizePreviousLifetime() {
             var prev = Interlocked.Exchange(ref _active, null);

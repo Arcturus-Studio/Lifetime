@@ -3,7 +3,7 @@ using System;
 namespace TwistedOak.Util {
     /// <summary>
     /// Exposes a lifetime that permanently transitions from mortal to dead when the managing DisposableLifetime instance is disposed.
-    /// When a DisposableLifetime is garbage collected without being disposed, the exposed lifetime becomes stuck in mortal limbo.
+    /// When a DisposableLifetime is garbage collected without being disposed, the exposed lifetime becomes immortal.
     /// </summary>
     public sealed class DisposableLifetime : IDisposable {
         private readonly LifetimeSource _source = new LifetimeSource();

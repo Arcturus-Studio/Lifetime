@@ -28,22 +28,12 @@ namespace TwistedOak.Util {
             this._defSoul = soul;
         }
 
+        /// <summary>Determines if this lifetime is still transiently mortal.</summary>
+        public bool IsMortal { get { return Soul.Phase == Phase.Mortal; } }
         /// <summary>Determines if this lifetime has permanently transitioned from mortal to immortal.</summary>
         public bool IsImmortal { get { return Soul.Phase == Phase.Immortal; } }
         /// <summary>Determines if this lifetime has permanently transitioned from mortal to dead.</summary>
         public bool IsDead { get { return Soul.Phase == Phase.Dead; } }
-
-        /// <summary>
-        /// Registers an action to perform when this lifetime is either dead or immortal.
-        /// If a registration lifetime is given and becomes dead before this lifetime becomes dead or immortal, the registration is cancelled.
-        /// </summary>
-        public void WhenDeadOrImmortal(Action action, Lifetime registrationLifetime = default(Lifetime)) {
-            if (action == null) throw new ArgumentNullException("action");
-            var s = Soul;
-            s.DependentRegister(
-                () => { if (s.Phase == Phase.Dead || s.Phase == Phase.Immortal) action(); },
-                registrationLifetime.Soul);
-        }
 
         /// <summary>
         /// Registers an action to perform when this lifetime is dead.
@@ -54,18 +44,6 @@ namespace TwistedOak.Util {
             var s = Soul;
             s.DependentRegister(
                 () => { if (s.Phase == Phase.Dead) action(); },
-                registrationLifetime.Soul);
-        }
-
-        /// <summary>
-        /// Registers an action to perform when this lifetime is immortal.
-        /// If a registration lifetime is given and becomes dead before this lifetime becomes immortal, the registration is cancelled.
-        /// </summary>
-        public void WhenImmortal(Action action, Lifetime registrationLifetime = default(Lifetime)) {
-            if (action == null) throw new ArgumentNullException("action");
-            var s = Soul;
-            s.DependentRegister(
-                () => { if (s.Phase == Phase.Immortal) action(); },
                 registrationLifetime.Soul);
         }
 
@@ -107,7 +85,6 @@ namespace TwistedOak.Util {
         ///<summary>Returns a text representation of the lifetime's current state.</summary>
         public override string ToString() {
             if (Soul.Phase == Phase.Mortal) return "Alive";
-            if (Soul.Phase == Phase.Limbo) return "Alive (Limbo)";
             return Soul.Phase.ToString();
         }
     }

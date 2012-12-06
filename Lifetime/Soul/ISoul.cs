@@ -5,7 +5,7 @@ namespace TwistedOak.Util.Soul {
 
     ///<summary>The internal representation of a lifetime.</summary>
     internal interface ISoul {
-        ///<summary>The soul's state, either transiently mortal or permanently dead/immortal/limbo.</summary>
+        ///<summary>The soul's state, either transiently mortal or permanently dead/immortal.</summary>
         Phase Phase { get; }
         /// <summary>
         /// Adds a callback to be run when the soul is not mortal.

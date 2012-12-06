@@ -71,7 +71,7 @@ public class LifetimeExchangerTest {
         InvalidCallbackMaker.AssertCollectedAfter(a => {
             var r = new LifetimeExchanger();
             var life = r.StartNextAndEndPreviousLifetime();
-            life.WhenDeadOrImmortal(a);
+            life.WhenDead(a);
             return life;
         });
     }

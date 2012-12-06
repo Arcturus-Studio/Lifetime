@@ -8,21 +8,21 @@ namespace TwistedOak.Util.Soul {
 
         /// <summary>
         /// Returns a soul permanently stuck in the given phase.
-        /// A permanently mortal soul is considered to be in limbo.
+        /// A permanently mortal soul is considered to be immortal.
         /// </summary>
         public static ISoul AsPermanentSoul(this Phase phase) {
-            if (phase == Phase.Dead) return PermanentSoul.Dead;
-            if (phase == Phase.Immortal) return PermanentSoul.Immortal;
-            return PermanentSoul.Limbo;
+            return phase == Phase.Dead 
+                 ? PermanentSoul.Dead 
+                 : PermanentSoul.Immortal;
         }
         /// <summary>
         /// Returns a lifetime permanently stuck in the given phase.
-        /// A permanently mortal soul is considered to be in limbo.
+        /// A permanently mortal soul is considered to be immortal.
         /// </summary>
         public static Lifetime AsPermanentLifetime(this Phase phase) {
             return new Lifetime(phase.AsPermanentSoul());
         }
-        ///<summary>Returns a lifetime with a collapsing soul wrapping the given soul.</summary>
+        ///<summary>Returns a lifetime for the given soul, collapsing it to a simpler soul when possible.</summary>
         public static Lifetime AsCollapsingLifetime(this ISoul soul) {
             // avoid any wrapping if possible
             var p = soul.Phase;
@@ -61,26 +61,26 @@ namespace TwistedOak.Util.Soul {
         }
 
         ///<summary>Registers a callback to the dependent soul that only occurs if the necessary soul doesn't die first, ensuring everything is cleaned up properly.</summary>
-        public static RegistrationRemover DependentRegister(this ISoul dependentSoul, Action action, ISoul necessarySoul) {
-            if (dependentSoul == null) throw new ArgumentNullException("dependentSoul");
+        public static RegistrationRemover DependentRegister(this ISoul soul, Action action, ISoul necessarySoul) {
+            if (soul == null) throw new ArgumentNullException("soul");
             if (action == null) throw new ArgumentNullException("action");
             if (necessarySoul == null) throw new ArgumentNullException("necessarySoul");
 
-            // avoid complicated setup when possible
+            // when the necessary soul is the same soul as the dependent soul, assume the callback invocation will beat the registration removal
+            if (ReferenceEquals(soul, necessarySoul))
+                necessarySoul = PermanentSoul.Immortal;
+
+            // avoid wrapping when possible
             if (necessarySoul.Phase == Phase.Dead)
                 return EmptyRemover;
-            if (dependentSoul.Phase != Phase.Mortal) {
+            if (soul.Phase != Phase.Mortal) {
                 action();
                 return EmptyRemover;
             }
-            if (necessarySoul.Phase == Phase.Immortal || necessarySoul.Phase == Phase.Limbo)
-                return dependentSoul.Register(action);
+            if (necessarySoul.Phase == Phase.Immortal)
+                return soul.Register(action);
 
-            // when the necessary soul is the same soul as the dependent soul, assume the callback invocation will beat the registration removal
-            if (ReferenceEquals(dependentSoul, necessarySoul))
-                necessarySoul = PermanentSoul.Immortal;
-
-            return dependentSoul.InterdependentRegister(
+            return soul.InterdependentRegister(
                 () => {
                     action();
                     return true;

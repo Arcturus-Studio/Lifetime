@@ -4,7 +4,7 @@ using TwistedOak.Util;
 
 static class Program {
     static void PrintEventualResult(this Lifetime lifetime, string name) {
-        lifetime.WhenDeadOrImmortal(() => Console.WriteLine("{0}: {1}", name, lifetime));
+        lifetime.WhenDead(() => Console.WriteLine("{0}: {1}", name, lifetime));
     }
     static void Main() {
         // prints 'dead'
@@ -32,7 +32,7 @@ static class Program {
             () => new LifetimeSource().Lifetime).Invoke();
         for (var i = 0; i < 2000; i++) {
             var r = new byte[2000 - 91];
-            limbo.WhenDeadOrImmortal(() => { // never actually runs
+            limbo.WhenDead(() => { // never actually runs
                 r[0] += 1; // large amount of memory captured by closure
                 throw new InvalidOperationException();
             });
