@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Internal\AnonymousSoul.cs" />
+    <Compile Include="Internal\CollapsingSoul.cs" />
     <Compile Include="Internal\ISoul.cs" />
     <Compile Include="Internal\DoublyLinkedNode.cs" />
     <Compile Include="LifetimeSource.cs" />

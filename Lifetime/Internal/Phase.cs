@@ -1,4 +1,5 @@
 ﻿namespace TwistedOak.Util {
+    ///<summary>A state of life.</summary>
     internal enum Phase {
         /// <summary>The lifetime has not yet been killed or immortalized.</summary>
         Mortal,

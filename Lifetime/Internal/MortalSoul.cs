@@ -1,6 +1,7 @@
 ﻿using System;
 
 namespace TwistedOak.Util {
+    ///<summary>A soul that can be transitioned from mortal to some other phase.</summary>
     internal sealed class MortalSoul : ISoul {
         ///<summary>Callbacks to run when the lifetime is killed, immortalized, or enters limbo.</summary>
         private DoublyLinkedNode<Action> _callbacks;
@@ -47,12 +48,6 @@ namespace TwistedOak.Util {
         /// Runs the given action synchronously and returns null if this lifetime is already immortal or dead.
         /// </summary>
         public RegistrationRemover Register(Action action) {
-            // quick check for already finished
-            if (Phase != Phase.Mortal) {
-                action();
-                return SoulUtils.EmptyRemover;
-            }
-
             // hold a weak reference to the node, to ensure it can be collected after the this soul becomes non-mortal
             WeakReference weakNode;
             lock (this) {

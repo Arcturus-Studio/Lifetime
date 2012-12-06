@@ -7,30 +7,26 @@ namespace TwistedOak.Util {
         ///<summary>Returns a lifetime that dies when the given lifetime loses its mortality by either dying or becoming immortal.</summary>
         internal static Lifetime Mortality(this Lifetime lifetime) {
             var s = lifetime.Soul;
-            Func<Phase> mortality = () => {
-                if (s.Phase == Phase.Immortal) return Phase.Dead;
-                return s.Phase;
-            };
-
-            if (s.Phase != Phase.Mortal)
-                return new Lifetime(SoulUtils.PermanentSoul(mortality()));
-
-            return new Lifetime(new AnonymousSoul(mortality, s.Register));
+            return new AnonymousSoul(
+                () => {
+                    if (s.Phase == Phase.Immortal) return Phase.Dead;
+                    return s.Phase;
+                },
+                s.Register
+            ).AsCollapsingLifetime();
         }
 
         ///<summary>Returns a lifetime that dies when the given lifetime becomes immortal or becomes immortal when the given lifetime dies.</summary>
         internal static Lifetime Opposite(this Lifetime lifetime) {
             var s = lifetime.Soul;
-            Func<Phase> invert = () => {
-                if (s.Phase == Phase.Immortal) return Phase.Dead;
-                if (s.Phase == Phase.Dead) return Phase.Immortal;
-                return s.Phase;
-            };
-
-            if (s.Phase != Phase.Mortal) 
-                return new Lifetime(SoulUtils.PermanentSoul(invert()));
-            
-            return new Lifetime(new AnonymousSoul(invert, s.Register));
+            return new AnonymousSoul(
+                () => {
+                    if (s.Phase == Phase.Immortal) return Phase.Dead;
+                    if (s.Phase == Phase.Dead) return Phase.Immortal;
+                    return s.Phase;
+                }, 
+                s.Register
+            ).AsCollapsingLifetime();
         }
 
         ///<summary>Returns a lifetime that dies when either of the given lifetimes dies or becomes immortal when both of the given lifetimes become immortal.</summary>
@@ -46,10 +42,7 @@ namespace TwistedOak.Util {
                 return Phase.Immortal;
             };
             
-            if (minPhase() != Phase.Mortal)
-                return new Lifetime(SoulUtils.PermanentSoul(minPhase()));
-
-            return new Lifetime(new AnonymousSoul(
+            return new AnonymousSoul(
                 minPhase,
                 action => {
                     Func<bool> tryComplete = () => {
@@ -58,7 +51,8 @@ namespace TwistedOak.Util {
                         return b;
                     };
                     return SoulUtils.InterdependentRegister(s1, tryComplete, s2, tryComplete);
-                }));
+                }
+            ).AsCollapsingLifetime();
         }
 
         ///<summary>Returns a lifetime that becomes immortal when either of the given lifetimes becomes immortal or dies when both of the given lifetimes die.</summary>

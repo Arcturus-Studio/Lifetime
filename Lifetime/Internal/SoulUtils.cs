@@ -17,13 +17,28 @@ namespace TwistedOak.Util {
         public static readonly ISoul DeadSoul = MakePermanentSoul(Phase.Dead);
         public static readonly ISoul LimboSoul = MakePermanentSoul(Phase.Limbo);
 
-        public static ISoul PermanentSoul(Phase phase) {
+        /// <summary>
+        /// Returns a soul permanently stuck in the given phase.
+        /// A permanently mortal soul is considered to be in limbo.
+        /// </summary>
+        public static ISoul AsPermanentSoul(this Phase phase) {
             if (phase == Phase.Dead) return DeadSoul;
             if (phase == Phase.Immortal) return ImmortalSoul;
-            if (phase == Phase.Limbo) return LimboSoul;
-            throw new ArgumentOutOfRangeException("phase");
+            return LimboSoul;
+        }
+        /// <summary>
+        /// Returns a lifetime permanently stuck in the given phase.
+        /// A permanently mortal soul is considered to be in limbo.
+        /// </summary>
+        public static Lifetime AsPermanentLifetime(this Phase phase) {
+            return new Lifetime(phase.AsPermanentSoul());
+        }
+        ///<summary>Returns a lifetime with a collapsing soul wrapping the given soul.</summary>
+        public static Lifetime AsCollapsingLifetime(this ISoul soul) {
+            return new Lifetime(new CollapsingSoul(soul));
         }
 
+        ///<summary>Registers callbacks to each soul, ensuring everything is cleaned up properly upon completion.</summary>
         public static RegistrationRemover InterdependentRegister(ISoul soul1, Func<bool> tryComplete1, ISoul soul2, Func<bool> tryComplete2) {
             if (soul1 == null) throw new ArgumentNullException("soul1");
             if (tryComplete1 == null) throw new ArgumentNullException("tryComplete1");
@@ -52,6 +67,7 @@ namespace TwistedOak.Util {
             };
         }
 
+        ///<summary>Registers a callback to the dependent soul that only occurs if the necessary soul doesn't die first, ensuring everything is cleaned up properly.</summary>
         public static RegistrationRemover DependentRegister(this ISoul dependentSoul, Action action, ISoul necessarySoul) {
             if (dependentSoul == null) throw new ArgumentNullException("dependentSoul");
             if (action == null) throw new ArgumentNullException("action");

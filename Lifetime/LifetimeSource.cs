@@ -10,8 +10,15 @@ namespace TwistedOak.Util {
     [DebuggerDisplay("{ToString()}")]
     public sealed class LifetimeSource {
         private readonly MortalSoul _soul = new MortalSoul();
+        
         /// <summary>The lifetime exposed and managed by the lifetime source.</summary>
-        public Lifetime Lifetime { get { return new Lifetime(_soul); } }
+        public Lifetime Lifetime { get; private set; }
+
+        ///<summary>Creates a new lifetime source managing a new initially mortal lifetime.</summary>
+        public LifetimeSource() {
+            this.Lifetime = _soul.AsCollapsingLifetime();
+        }
+
         /// <summary>
         /// Permanently transitions the source's exposed lifetime from mortal to dead.
         /// No effect when the exposed lifetime is already dead.

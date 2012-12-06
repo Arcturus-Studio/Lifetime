@@ -16,7 +16,7 @@ internal static class LifetimeTestUtil {
     }
     public static Task WhenNotMortalTask(this Lifetime lifetime) {
         var t = new TaskCompletionSource<bool>();
-        lifetime.WhenNotMortal(() => t.SetResult(true));
+        lifetime.WhenDeadOrImmortal(() => t.SetResult(true));
         return t.Task;
     }
     public static void AssertCollectedAfter<T>(this Func<T> func, Action<T> action) where T : class {
@@ -66,40 +66,32 @@ public class LifetimeTest {
     [TestMethod]
     public void LifetimeIsProperties() {
         Lifetime.Immortal.IsImmortal.AssertIsTrue();
-        Lifetime.Immortal.IsMortal.AssertIsFalse();
         Lifetime.Immortal.IsDead.AssertIsFalse();
         Lifetime.Dead.IsImmortal.AssertIsFalse();
-        Lifetime.Dead.IsMortal.AssertIsFalse();
         Lifetime.Dead.IsDead.AssertIsTrue();
 
         var doomed = new DoomedLife();
         using (doomed) {
             doomed.Lifetime.IsImmortal.AssertIsFalse();
-            doomed.Lifetime.IsMortal.AssertIsTrue();
             doomed.Lifetime.IsDead.AssertIsFalse();
         }
         doomed.Lifetime.IsImmortal.AssertIsFalse();
-        doomed.Lifetime.IsMortal.AssertIsFalse();
         doomed.Lifetime.IsDead.AssertIsTrue();
 
         var blessed = new BlessedLife();
         using (blessed) {
             blessed.Lifetime.IsImmortal.AssertIsFalse();
-            blessed.Lifetime.IsMortal.AssertIsTrue();
             blessed.Lifetime.IsDead.AssertIsFalse();
         }
         blessed.Lifetime.IsImmortal.AssertIsTrue();
-        blessed.Lifetime.IsMortal.AssertIsFalse();
         blessed.Lifetime.IsDead.AssertIsFalse();
 
         var limbod = new LimboLife();
         using (limbod) {
             limbod.Lifetime.IsImmortal.AssertIsFalse();
-            limbod.Lifetime.IsMortal.AssertIsTrue();
             limbod.Lifetime.IsDead.AssertIsFalse();
         }
         limbod.Lifetime.IsImmortal.AssertIsFalse();
-        limbod.Lifetime.IsMortal.AssertIsTrue();
         limbod.Lifetime.IsDead.AssertIsFalse();
     }
 
@@ -156,7 +148,7 @@ public class LifetimeTest {
         var whens = new Action<Lifetime, Action, Lifetime>[] {
             (e, a, r) => e.WhenDead(a, r),
             (e, a, r) => e.WhenImmortal(a, r),
-            (e, a, r) => e.WhenNotMortal(a, r)
+            (e, a, r) => e.WhenDeadOrImmortal(a, r)
         };
         var lifes = new[] {
             Lifetime.Immortal,
