@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using TwistedOak.Util.Soul;
 
 namespace TwistedOak.Util {
@@ -80,6 +81,15 @@ namespace TwistedOak.Util {
             if (Equals(this, other)) return true;
             var consistentPhase = Soul.Phase;
             return consistentPhase != Phase.Mortal && consistentPhase == other.Soul.Phase;
+        }
+
+        ///<summary>Returns a cancellation token that is cancelled if the lifetime ends.</summary>
+        public static implicit operator CancellationToken(Lifetime lifetime) {
+            if (lifetime.IsImmortal) return default(CancellationToken);
+            
+            var source = new CancellationTokenSource();
+            lifetime.WhenDead(source.Cancel);
+            return source.Token;
         }
 
         ///<summary>Determines if the other lifetime has the same source.</summary>

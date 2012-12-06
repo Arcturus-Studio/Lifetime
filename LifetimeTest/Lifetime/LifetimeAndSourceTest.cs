@@ -1,10 +1,26 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TwistedOak.Util;
 
 [TestClass]
 public class LifetimeAndSourceTest {
+    private static readonly Func<Action> InvalidCallbackMaker = () => {
+        var r = new object();
+        return () => {
+            if (r == new object()) throw new Exception();
+            throw new Exception();
+        };
+    };
+    private static readonly Func<Action> ValidCallbackMaker = () => {
+        var r = new object();
+        return () => {
+            if (r == new object()) {
+                r = new object();
+            }
+        };
+    };
     internal static Lifetime LimboedLifetime { get { using (var r = new LimboLife()) return r.Lifetime; } }
     internal sealed class DoomedLife : IDisposable {
         private readonly LifetimeSource _source = new LifetimeSource();
@@ -28,6 +44,40 @@ public class LifetimeAndSourceTest {
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
+    }
+
+    [TestMethod]
+    public void AsCancellationToken() {
+        ((CancellationToken)Lifetime.Immortal).CanBeCanceled.AssertIsFalse();
+        ((CancellationToken)Lifetime.Dead).IsCancellationRequested.AssertIsTrue();
+
+        // cancelled on death
+        var doomed = new LifetimeSource();
+        CancellationToken dt = doomed.Lifetime;
+        dt.CanBeCanceled.AssertIsTrue();
+        dt.IsCancellationRequested.AssertIsFalse();
+        doomed.EndLifetime();
+        dt.IsCancellationRequested.AssertIsTrue();
+        // already cancelled when already dead
+        ((CancellationToken)doomed.Lifetime).IsCancellationRequested.AssertIsTrue();
+
+        // hangs on immortal
+        var blessed = new LifetimeSource();
+        CancellationToken bt = blessed.Lifetime;
+        bt.CanBeCanceled.AssertIsTrue();
+        bt.IsCancellationRequested.AssertIsFalse();
+        blessed.ImmortalizeLifetime();
+        bt.IsCancellationRequested.AssertIsFalse();
+        // knows can't be cancelled when already immortal
+        ((CancellationToken)blessed.Lifetime).CanBeCanceled.AssertIsFalse();
+
+        // hangs on limbo
+        InvalidCallbackMaker.AssertNotCollectedAfter(action => {
+            var r = new LifetimeSource();
+            CancellationToken ct = r.Lifetime;
+            ct.Register(action);
+            return ct;
+        });
     }
 
     [TestMethod]
@@ -151,13 +201,8 @@ public class LifetimeAndSourceTest {
             mortal.Lifetime
         };
 
-        var i = 0;
-        Func<Action> f = () => {
-            var r = i++;
-            return () => i += r;
-        };
-
         // callbacks are not kept when the lifetime is not mortal
+        var f = ValidCallbackMaker;
         foreach (var when in whens) {
             foreach (var life in lifes) {
                 // pre-finished
