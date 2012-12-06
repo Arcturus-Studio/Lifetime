@@ -226,94 +226,61 @@ public class LifetimeAndSourceTest {
     public void LifetimeDeathConcurrency() {
         var repeats = 20;
         foreach (var repeat in Enumerable.Range(0, repeats)) {
-            LifetimeDeathConcurrency_Attempt(threadCount: 4, callbackCount: 10000);
+            var n = 0;
+            var source = new LifetimeSource();
+            var threadCount = 4;
+            var callbackCount = 10000;
+            TestUtil.ConcurrencyTest(
+                threadCount,
+                callbackCount,
+                repeatedWork: (t, i) => source.Lifetime.WhenDead(() => Interlocked.Increment(ref n)),
+                finalWork: t => source.EndLifetime());
+            n.AssertEquals(callbackCount * threadCount);
         }
     }
-    private static void LifetimeDeathConcurrency_Attempt(int threadCount, int callbackCount) {
-        var n = 0;
-        var source = new LifetimeSource();
-        var threads =
-            Enumerable.Range(0, threadCount)
-            .Select(e => new Thread(() => {
-                foreach (var i in Enumerable.Range(0, callbackCount)) {
-                    source.Lifetime.WhenDead(() => Interlocked.Increment(ref n));
-                }
-                source.EndLifetime();
-            }))
-            .ToArray();
-        
-        foreach (var thread in threads)
-            thread.Start();
-        foreach (var thread in threads)
-            thread.Join();
-        
-        n.AssertEquals(callbackCount * threadCount);
+    [TestMethod]
+    public void LifetimeImmortalityConcurrency() {
+        var repeats = 20;
+        foreach (var repeat in Enumerable.Range(0, repeats)) {
+            var n = 0;
+            var source = new LifetimeSource();
+            TestUtil.ConcurrencyTest(
+                threadCount: 4,
+                callbackCount: 10000,
+                repeatedWork: (t, i) => source.Lifetime.WhenDead(() => Interlocked.Increment(ref n)),
+                finalWork: t => source.ImmortalizeLifetime());
+            n.AssertEquals(0);
+        }
     }
 
     [TestMethod]
     public void LifetimeConditionalConcurrency() {
         var repeats = 20;
         foreach (var repeat in Enumerable.Range(0, repeats)) {
-            LifetimeConditionalConcurrency_Attempt(threadCount: 4, callbackCount: 9000);
-        }
-    }
-    private static void LifetimeConditionalConcurrency_Attempt(int threadCount, int callbackCount) {
-        var n = 0;
-        var sources = new[] {
-            new LifetimeSource(),
-            new LifetimeSource(),
-            new LifetimeSource()
-        };
-        var threads =
-            Enumerable.Range(0, threadCount)
-            .Select(e => new Thread(() => {
-                foreach (var i in Enumerable.Range(0, callbackCount)) {
+            var n = 0;
+            var sources = new[] {
+                new LifetimeSource(),
+                new LifetimeSource(),
+                new LifetimeSource()
+            };
+            var threadCount = 4;
+            var callbackCount = 9000;
+            TestUtil.ConcurrencyTest(
+                threadCount,
+                callbackCount,
+                (t, i) => {
                     var i1 = i % 3;
-                    var i2 = (i/3)%2;
+                    var i2 = (i / 3) % 2;
                     if (i1 <= i2) i2 += 1;
                     sources[i1].Lifetime.WhenDead(() => Interlocked.Increment(ref n), sources[i2].Lifetime);
-                }
-                sources[0].EndLifetime();
-            }))
-            .ToArray();
+                },
+                t => sources[0].EndLifetime());
 
-        foreach (var thread in threads)
-            thread.Start();
-        foreach (var thread in threads)
-            thread.Join();
-        
-        n.AssertEquals(callbackCount * threadCount * 2 / 6);
-        sources[1].EndLifetime();
-        n.AssertEquals(callbackCount * threadCount * 3 / 6);
-        sources[2].EndLifetime();
-        n.AssertEquals(callbackCount * threadCount * 3 / 6);
-    }
-
-    [TestMethod]
-    public void LifetimeImmortalityConcurrency() {
-        var repeats = 20;
-        foreach (var repeat in Enumerable.Range(0, repeats)) {
-            LifetimeImmortalityConcurrency_Attempt(threadCount: 4, callbackCount: 10000);
+            n.AssertEquals(callbackCount * threadCount * 2 / 6);
+            sources[1].EndLifetime();
+            n.AssertEquals(callbackCount * threadCount * 3 / 6);
+            sources[2].EndLifetime();
+            n.AssertEquals(callbackCount * threadCount * 3 / 6);
         }
-    }
-    private static void LifetimeImmortalityConcurrency_Attempt(int threadCount, int callbackCount) {
-        var n = 0;
-        var source = new LifetimeSource();
-        var threads =
-            Enumerable.Range(0, threadCount)
-            .Select(e => new Thread(() => {
-                foreach (var i in Enumerable.Range(0, callbackCount)) {
-                    source.Lifetime.WhenDead(() => Interlocked.Increment(ref n));
-                }
-                source.ImmortalizeLifetime();
-            }))
-            .ToArray();
-
-        foreach (var thread in threads)
-            thread.Start();
-        foreach (var thread in threads)
-            thread.Join();
-
-        n.AssertEquals(0);
     }
 }

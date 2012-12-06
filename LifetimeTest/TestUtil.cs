@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
@@ -28,6 +29,31 @@ internal static class TestUtil {
     [DebuggerStepThrough]
     public static void AssertIsFalse(this bool b) {
         Assert.IsFalse(b);
+    }
+    public static void ConcurrencyTest(int threadCount, int callbackCount, Action<int, int> repeatedWork, Action<int> finalWork = null) {
+        var exceptions = new List<Exception>();
+        var threads =
+            Enumerable.Range(0, threadCount)
+                        .Select(e => new Thread(() => {
+                            try {
+                                foreach (var i in Enumerable.Range(0, callbackCount)) {
+                                    repeatedWork(e, i);
+                                }
+                                if (finalWork != null) finalWork(e);
+                            } catch (Exception ex) {
+                                lock (exceptions)
+                                    exceptions.Add(ex);
+                            }
+                        }))
+                        .ToArray();
+
+        foreach (var thread in threads)
+            thread.Start();
+        foreach (var thread in threads)
+            thread.Join();
+
+        if (exceptions.Count == 1) throw exceptions.Single();
+        if (exceptions.Count > 1) throw new AggregateException(exceptions);
     }
     public static void ExpectException<TException>(Action action) where TException : Exception {
         try {

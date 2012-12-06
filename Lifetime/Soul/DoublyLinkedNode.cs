@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TwistedOak.Util.Soul {
     ///<summary>A doubly-linked list node for a circular linked list.</summary>
@@ -40,6 +41,8 @@ namespace TwistedOak.Util.Soul {
             while (true) {
                 var n = h._next;
                 if (n == this) break;
+                if (ReferenceEquals(n, h)) 
+                    throw new InvalidOperationException("List destructively modified while being enumerated.");
                 h = n;
                 yield return h._item;
             }
