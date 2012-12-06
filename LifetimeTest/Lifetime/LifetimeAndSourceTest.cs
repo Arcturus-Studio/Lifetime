@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TwistedOak.Util;
 
-internal class LifetimeAndSourceTest {
+[TestClass]
+public class LifetimeAndSourceTest {
     internal static Lifetime LimboedLifetime { get { using (var r = new LimboLife()) return r.Lifetime; } }
     internal sealed class DoomedLife : IDisposable {
         private readonly LifetimeSource _source = new LifetimeSource();
@@ -34,18 +35,19 @@ internal class LifetimeAndSourceTest {
         // mortals are not congruent or equal
         var s1 = new LifetimeSource();
         var s2 = new LifetimeSource();
+        var x = LimboedLifetime;
         var a = new Func<Lifetime>[] {
             () => Lifetime.Immortal, 
             () => Lifetime.Dead,
-            () => LimboedLifetime,
+            () => x,
             () => s1.Lifetime,
-            () => s2.Lifetime,
+            () => s2.Lifetime
         };
         for (var i = 0; i < a.Length; i++) {
             for (var j = 0; j < a.Length; j++) {
-                a[0]().IsCongruentTo(a[1]()).AssertEquals(i == j);
-                a[0]().Equals(a[1]()).AssertEquals(i == j);
-                if (i == j) a[0]().GetHashCode().AssertEquals(a[1].GetHashCode());
+                a[i]().IsCongruentTo(a[j]()).AssertEquals(i == j);
+                a[i]().Equals(a[j]()).AssertEquals(i == j);
+                if (i == j) a[i]().GetHashCode().AssertEquals(a[j]().GetHashCode());
             }
         }
         

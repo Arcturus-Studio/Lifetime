@@ -6,26 +6,14 @@ namespace TwistedOak.Util.Soul {
     internal static class Soul {
         public static readonly RegistrationRemover EmptyRemover = () => { };
 
-        private static ISoul MakePermanentSoul(Phase phase) {
-            return new AnonymousSoul(
-                () => phase,
-                action => {
-                    action();
-                    return EmptyRemover;
-                });
-        }
-        public static readonly ISoul ImmortalSoul = MakePermanentSoul(Phase.Immortal);
-        public static readonly ISoul DeadSoul = MakePermanentSoul(Phase.Dead);
-        public static readonly ISoul LimboSoul = MakePermanentSoul(Phase.Limbo);
-
         /// <summary>
         /// Returns a soul permanently stuck in the given phase.
         /// A permanently mortal soul is considered to be in limbo.
         /// </summary>
         public static ISoul AsPermanentSoul(this Phase phase) {
-            if (phase == Phase.Dead) return DeadSoul;
-            if (phase == Phase.Immortal) return ImmortalSoul;
-            return LimboSoul;
+            if (phase == Phase.Dead) return PermanentSoul.Dead;
+            if (phase == Phase.Immortal) return PermanentSoul.Immortal;
+            return PermanentSoul.Limbo;
         }
         /// <summary>
         /// Returns a lifetime permanently stuck in the given phase.
@@ -85,14 +73,12 @@ namespace TwistedOak.Util.Soul {
                 action();
                 return EmptyRemover;
             }
-            if (necessarySoul.Phase == Phase.Immortal || necessarySoul.Phase == Phase.Limbo) {
-                dependentSoul.Register(action);
-                return EmptyRemover;
-            }
+            if (necessarySoul.Phase == Phase.Immortal || necessarySoul.Phase == Phase.Limbo)
+                return dependentSoul.Register(action);
 
             // when the necessary soul is the same soul as the dependent soul, assume the callback invocation will beat the registration removal
             if (ReferenceEquals(dependentSoul, necessarySoul))
-                necessarySoul = ImmortalSoul;
+                necessarySoul = PermanentSoul.Immortal;
 
             return dependentSoul.InterdependentRegister(
                 () => {

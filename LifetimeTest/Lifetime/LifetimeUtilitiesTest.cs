@@ -3,8 +3,15 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TwistedOak.Util;
 
-internal class LifetimeUtilitiesTest {
-    private static readonly Func<Action> InvalidCallbackMaker = () => () => { throw new Exception(); };
+[TestClass]
+public class LifetimeUtilitiesTest {
+    private static readonly Func<Action> InvalidCallbackMaker = () => {
+        var r = new object();
+        return () => {
+            if (r == new object()) throw new Exception();
+            throw new Exception();
+        };
+    };
     
     [TestMethod]
     public void Mortality() {
@@ -89,7 +96,7 @@ internal class LifetimeUtilitiesTest {
 
         // equality optimization
         s1.Lifetime.Min(s1.Lifetime).AssertEquals(s1.Lifetime);
-        m1.Min(m1).AssertEquals(s1.Lifetime);
+        m1.Min(m1).AssertEquals(m1);
         // immortality optimization
         s1.Lifetime.Min(Lifetime.Immortal).AssertEquals(s1.Lifetime);
         Lifetime.Immortal.Min(m1).AssertEquals(m1);
@@ -148,7 +155,7 @@ internal class LifetimeUtilitiesTest {
 
         // equality optimization
         s1.Lifetime.Max(s1.Lifetime).AssertEquals(s1.Lifetime);
-        m1.Max(m1).AssertEquals(s1.Lifetime);
+        m1.Max(m1).AssertEquals(m1);
         // dead optimization
         s1.Lifetime.Max(Lifetime.Dead).AssertEquals(s1.Lifetime);
         Lifetime.Dead.Max(m1).AssertEquals(m1);

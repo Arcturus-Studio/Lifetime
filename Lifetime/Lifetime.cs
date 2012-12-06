@@ -14,15 +14,15 @@ namespace TwistedOak.Util {
         /// The default lifetime.
         /// A lifetime that has already permanently transitioned from mortal to immortal.
         /// </summary>
-        public static readonly Lifetime Immortal = Phase.Immortal.AsPermanentLifetime();
+        public static readonly Lifetime Immortal = new Lifetime(PermanentSoul.Immortal);
         /// <summary>
         /// NOT the default lifetime.
         /// A lifetime that has already permanently transitioned from mortal to dead.
         /// </summary>
-        public static readonly Lifetime Dead = Phase.Dead.AsPermanentLifetime();
+        public static readonly Lifetime Dead = new Lifetime(PermanentSoul.Dead);
 
         private readonly ISoul _defSoul;
-        internal ISoul Soul { get { return _defSoul ?? Util.Soul.Soul.ImmortalSoul; } }
+        internal ISoul Soul { get { return _defSoul ?? PermanentSoul.Immortal; } }
         internal Lifetime(ISoul soul) {
             this._defSoul = soul;
         }

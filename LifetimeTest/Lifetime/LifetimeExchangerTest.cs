@@ -2,8 +2,16 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TwistedOak.Util;
 
-internal class LifetimeExchangerTest {
-    private static readonly Func<Action> InvalidCallbackMaker = () => () => { throw new Exception(); };
+[TestClass]
+public class LifetimeExchangerTest {
+    private static readonly Func<Action> InvalidCallbackMaker = () => {
+        var r = new object();
+        return () => {
+            if (r == new object()) throw new Exception();
+            throw new Exception();
+        };
+    };
+
     [TestMethod]
     public void StartNextAndEndPreviousLifetime() {
         var r = new LifetimeExchanger();

@@ -73,36 +73,42 @@ internal static class TestUtil {
         t.TestWait(timeout ?? TimeSpan.FromSeconds(0.05));
         t.IsCompleted.AssertIsFalse();
     }
-    [DebuggerStepThrough]
     public static void AssertCollectedAfter<T>(this Func<T> collectableValueMaker, Action<T> doAndNoHold) where T : class {
         AssertCollectedAfter(collectableValueMaker, e => {
             doAndNoHold(e);
             return null;
         });
     }
-    [DebuggerStepThrough]
     public static void AssertNotCollectedAfter<T>(this Func<T> collectableValueMaker, Action<T> doAndNoHold) where T : class {
         AssertNotCollectedAfter(collectableValueMaker, e => {
             doAndNoHold(e);
             return null;
         });
     }
-    [DebuggerStepThrough]
+    private static void Clear<T>(ref T value) {
+        if (!ReferenceEquals(default(T), value)) 
+            value = default(T);
+    }
     public static void AssertCollectedAfter<T>(this Func<T> collectableValueMaker, Func<T, object> doAndHold) where T : class {
         var value = collectableValueMaker();
         var r = new WeakReference<T>(value);
         var held = doAndHold(value);
-        value = null;
+        Clear(ref value);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
         GC.Collect();
         r.TryGetTarget(out value).AssertIsFalse();
+        GC.KeepAlive(held);
     }
-    [DebuggerStepThrough]
     public static void AssertNotCollectedAfter<T>(this Func<T> collectableValueMaker, Func<T, object> doAndHold) where T : class {
         var value = collectableValueMaker();
         var r = new WeakReference<T>(value);
         var held = doAndHold(value);
-        value = null;
+        Clear(ref value);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
         GC.Collect();
         r.TryGetTarget(out value).AssertIsTrue();
+        GC.KeepAlive(held);
     }
 }
