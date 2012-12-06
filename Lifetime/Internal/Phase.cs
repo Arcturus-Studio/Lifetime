@@ -1,16 +1,15 @@
 ﻿namespace TwistedOak.Util {
     ///<summary>A state of life.</summary>
     internal enum Phase {
-        /// <summary>The lifetime has not yet been killed or immortalized.</summary>
+        /// <summary>The transient living state preceeding either death, immortality, or limbo.</summary>
         Mortal,
-        /// <summary>The lifetime has been permanently killed.</summary>
+        /// <summary>The permanent non-living state.</summary>
         Dead,
-        /// <summary>The lifetime has been permanently immortalized.</summary>
+        /// <summary>The permanent living state.</summary>
         Immortal,
         /// <summary>
-        /// The lifetime's source was garbage collected before the lifetime was killed or immortalized.
-        /// Callbacks will not be run, because what they reference may have been finalized.
-        /// The lifetime will never be killed or immortalized: it is stuck between the two states.
+        /// The permanent state stuck between being alive and not alive.
+        /// Occurs when a lifetime's source is garbage collected, preventing it from ever being killed or immortalized.
         /// </summary>
         Limbo
     }

@@ -24,7 +24,7 @@ namespace TwistedOak.Util {
 
             // the following is idempotent, so it's fine if multiple writers race
             _collapsed = true;
-            _subSoul = SoulUtils.PermanentSoul(Phase);
+            _subSoul = Phase.AsPermanentSoul();
             return phase;
         }
         public Phase Phase { get { return TryOptimize(); } }

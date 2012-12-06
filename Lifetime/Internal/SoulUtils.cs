@@ -2,6 +2,7 @@
 using System.Threading;
 
 namespace TwistedOak.Util {
+    ///<summary>Utility methods for working with souls</summary>
     internal static class SoulUtils {
         public static readonly RegistrationRemover EmptyRemover = () => { };
 

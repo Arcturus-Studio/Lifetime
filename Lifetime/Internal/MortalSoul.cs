@@ -12,24 +12,20 @@ namespace TwistedOak.Util {
             Phase = Phase.Mortal;
         }
 
-        public void TransitionPermanently(Phase newPhase) {
-            if (!TryTransitionPermanently(newPhase))
-                throw new InvalidOperationException(String.Format("Can't transition from {0} to {1}", Phase, newPhase));
-        }
         /// <summary>
         /// Permanentaly transitions this lifetime to be either dead or immortal.
         /// No effect if already transitioned to the desired state.
         /// Invalid operation if already transitioned to another state.
         /// </summary>
-        public bool TryTransitionPermanently(Phase newPhase) {
+        public void TransitionPermanently(Phase newPhase) {
             if (newPhase == Phase.Mortal) throw new ArgumentOutOfRangeException("newPhase");
             DoublyLinkedNode<Action> callbacks;
             lock (this) {
                 // transition
                 if (Phase == newPhase)
-                    return true;
+                    return;
                 if (Phase != Phase.Mortal)
-                    return false;
+                    throw new InvalidOperationException(String.Format("Can't transition from {0} to {1}", Phase, newPhase));
                 Phase = newPhase;
 
                 // callbacks
@@ -39,7 +35,6 @@ namespace TwistedOak.Util {
             if (callbacks != null)
                 foreach (var callback in callbacks.EnumerateOthers())
                     callback.Invoke();
-            return true;
         }
 
         /// <summary>

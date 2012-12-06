@@ -1,6 +1,7 @@
 ﻿using System;
 
 namespace TwistedOak.Util {
+    ///<summary>A soul implemented by delegates passed to its constructor.</summary>
     internal sealed class AnonymousSoul : ISoul {
         private readonly Func<Phase> _phase;
         private readonly Func<Action, RegistrationRemover> _register;
