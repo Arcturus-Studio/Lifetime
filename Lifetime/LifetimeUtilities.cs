@@ -4,7 +4,7 @@ namespace TwistedOak.Util {
     ///<summary>Utility classes for manipulating lifetimes.</summary>
     public static class LifetimeUtilities {
         ///<summary>Returns a lifetime that dies when the given lifetime loses its mortality by either dying or becoming immortal.</summary>
-        internal static Lifetime Mortality(this Lifetime lifetime) {
+        public static Lifetime Mortality(this Lifetime lifetime) {
             var s = lifetime.Soul;
             return new AnonymousSoul(
                 () => {
@@ -16,7 +16,7 @@ namespace TwistedOak.Util {
         }
 
         ///<summary>Returns a lifetime that dies when the given lifetime becomes immortal or becomes immortal when the given lifetime dies.</summary>
-        internal static Lifetime Opposite(this Lifetime lifetime) {
+        public static Lifetime Opposite(this Lifetime lifetime) {
             var s = lifetime.Soul;
             return new AnonymousSoul(
                 () => {
@@ -33,6 +33,7 @@ namespace TwistedOak.Util {
             // try to avoid any wrapping at all
             if (lifetime1.IsImmortal) return lifetime2;
             if (lifetime2.IsImmortal) return lifetime1;
+            if (Equals(lifetime1, lifetime2)) return lifetime1;
 
             return lifetime1.Soul.Combine(
                 lifetime2.Soul,
@@ -51,6 +52,7 @@ namespace TwistedOak.Util {
             // try to avoid any wrapping at all
             if (lifetime1.IsDead) return lifetime2;
             if (lifetime2.IsDead) return lifetime1;
+            if (Equals(lifetime1, lifetime2)) return lifetime1;
 
             return lifetime1.Soul.Combine(
                 lifetime2.Soul,

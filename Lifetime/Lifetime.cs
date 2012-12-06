@@ -9,7 +9,7 @@ namespace TwistedOak.Util {
     /// Lifetimes whose source is garbage collected are in limbo, meaning they are neither mortal nor dead nor immortal.
     /// </summary>
     [DebuggerDisplay("{ToString()}")]
-    public struct Lifetime {
+    public struct Lifetime : IEquatable<Lifetime> {
         /// <summary>
         /// The default lifetime.
         /// A lifetime that has already permanently transitioned from mortal to immortal.

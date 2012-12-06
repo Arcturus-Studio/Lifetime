@@ -50,8 +50,11 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Lifetime\LifetimeUtilitiesTest.cs" />
+    <Compile Include="Lifetime\LifetimeExchangerTest.cs" />
+    <Compile Include="Lifetime\LifetimeAndSourceTest.cs" />
+    <Compile Include="LifetimeTestUtil.cs" />
     <Compile Include="TestUtil.cs" />
-    <Compile Include="LifetimeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

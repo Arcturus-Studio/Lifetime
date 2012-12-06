@@ -45,7 +45,7 @@ internal static class TestUtil {
     [DebuggerStepThrough]
     public static T AssertRanToCompletion<T>(this Task<T> t, TimeSpan? timeout = null) {
         t.TestWait(timeout ?? TimeSpan.FromSeconds(10));
-        Assert.IsTrue(t.IsCompleted);
+        t.IsCompleted.AssertIsTrue();
         return t.Result;
     }
     [DebuggerStepThrough]
@@ -66,12 +66,43 @@ internal static class TestUtil {
             t.TestWait(timeout ?? TimeSpan.FromSeconds(5));
         } catch (Exception) {
         }
-        Assert.IsTrue(t.IsCanceled);
+        t.IsCanceled.AssertIsTrue();
     }
+    [DebuggerStepThrough]
     public static void AssertNotCompleted(this Task t, TimeSpan? timeout = null) {
         t.TestWait(timeout ?? TimeSpan.FromSeconds(0.05));
-        Assert.IsTrue(!t.IsCompleted);
-        Assert.IsTrue(!t.IsFaulted);
-        Assert.IsTrue(!t.IsCanceled);
+        t.IsCompleted.AssertIsFalse();
+    }
+    [DebuggerStepThrough]
+    public static void AssertCollectedAfter<T>(this Func<T> collectableValueMaker, Action<T> doAndNoHold) where T : class {
+        AssertCollectedAfter(collectableValueMaker, e => {
+            doAndNoHold(e);
+            return null;
+        });
+    }
+    [DebuggerStepThrough]
+    public static void AssertNotCollectedAfter<T>(this Func<T> collectableValueMaker, Action<T> doAndNoHold) where T : class {
+        AssertNotCollectedAfter(collectableValueMaker, e => {
+            doAndNoHold(e);
+            return null;
+        });
+    }
+    [DebuggerStepThrough]
+    public static void AssertCollectedAfter<T>(this Func<T> collectableValueMaker, Func<T, object> doAndHold) where T : class {
+        var value = collectableValueMaker();
+        var r = new WeakReference<T>(value);
+        var held = doAndHold(value);
+        value = null;
+        GC.Collect();
+        r.TryGetTarget(out value).AssertIsFalse();
+    }
+    [DebuggerStepThrough]
+    public static void AssertNotCollectedAfter<T>(this Func<T> collectableValueMaker, Func<T, object> doAndHold) where T : class {
+        var value = collectableValueMaker();
+        var r = new WeakReference<T>(value);
+        var held = doAndHold(value);
+        value = null;
+        GC.Collect();
+        r.TryGetTarget(out value).AssertIsTrue();
     }
 }

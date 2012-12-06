@@ -3,41 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TwistedOak.Util;
 
-internal static class LifetimeTestUtil {
-    public static Task WhenDeadTask(this Lifetime lifetime) {
-        var t = new TaskCompletionSource<bool>();
-        lifetime.WhenDead(() => t.SetResult(true));
-        return t.Task;
-    }
-    public static Task WhenImmortalTask(this Lifetime lifetime) {
-        var t = new TaskCompletionSource<bool>();
-        lifetime.WhenImmortal(() => t.SetResult(true));
-        return t.Task;
-    }
-    public static Task WhenNotMortalTask(this Lifetime lifetime) {
-        var t = new TaskCompletionSource<bool>();
-        lifetime.WhenDeadOrImmortal(() => t.SetResult(true));
-        return t.Task;
-    }
-    public static void AssertCollectedAfter<T>(this Func<T> func, Action<T> action) where T : class {
-        var value = func();
-        var r = new WeakReference<T>(value);
-        action(value);
-        value = null;
-        GC.Collect();
-        r.TryGetTarget(out value).AssertIsFalse();
-    }
-    public static void AssertNotCollectedAfter<T>(this Func<T> func, Action<T> action) where T : class {
-        var value = func();
-        var r = new WeakReference<T>(value);
-        action(value);
-        value = null;
-        GC.Collect();
-        r.TryGetTarget(out value).AssertIsTrue();
-    }
-}
-[TestClass]
-public class LifetimeTest {
+internal class LifetimeAndSourceTest {
     internal static Lifetime LimboedLifetime { get { using (var r = new LimboLife()) return r.Lifetime; } }
     internal sealed class DoomedLife : IDisposable {
         private readonly LifetimeSource _source = new LifetimeSource();
@@ -64,46 +30,79 @@ public class LifetimeTest {
     }
 
     [TestMethod]
-    public void LifetimeIsProperties() {
+    public void Equality() {
+        // mortals are not congruent or equal
+        var s1 = new LifetimeSource();
+        var s2 = new LifetimeSource();
+        var a = new Func<Lifetime>[] {
+            () => Lifetime.Immortal, 
+            () => Lifetime.Dead,
+            () => LimboedLifetime,
+            () => s1.Lifetime,
+            () => s2.Lifetime,
+        };
+        for (var i = 0; i < a.Length; i++) {
+            for (var j = 0; j < a.Length; j++) {
+                a[0]().IsCongruentTo(a[1]()).AssertEquals(i == j);
+                a[0]().Equals(a[1]()).AssertEquals(i == j);
+                if (i == j) a[0]().GetHashCode().AssertEquals(a[1].GetHashCode());
+            }
+        }
+        
+        // but mortals become congruent when set to the same phase
+        s1.EndLifetime();
+        s2.EndLifetime();
+        s1.Lifetime.IsCongruentTo(s2.Lifetime).AssertIsTrue();
+    }
+
+    [TestMethod]
+    public void Status() {
         Lifetime.Immortal.IsImmortal.AssertIsTrue();
         Lifetime.Immortal.IsDead.AssertIsFalse();
         Lifetime.Dead.IsImmortal.AssertIsFalse();
         Lifetime.Dead.IsDead.AssertIsTrue();
 
-        var doomed = new DoomedLife();
-        using (doomed) {
-            doomed.Lifetime.IsImmortal.AssertIsFalse();
-            doomed.Lifetime.IsDead.AssertIsFalse();
-        }
+        // transition to dead
+        var doomed = new LifetimeSource();
+        doomed.Lifetime.IsImmortal.AssertIsFalse();
+        doomed.Lifetime.IsDead.AssertIsFalse();
+        doomed.EndLifetime();
         doomed.Lifetime.IsImmortal.AssertIsFalse();
         doomed.Lifetime.IsDead.AssertIsTrue();
 
-        var blessed = new BlessedLife();
-        using (blessed) {
-            blessed.Lifetime.IsImmortal.AssertIsFalse();
-            blessed.Lifetime.IsDead.AssertIsFalse();
-        }
+        // transition to immortal
+        var blessed = new LifetimeSource();
+        blessed.Lifetime.IsImmortal.AssertIsFalse();
+        blessed.Lifetime.IsDead.AssertIsFalse();
+        blessed.ImmortalizeLifetime();
         blessed.Lifetime.IsImmortal.AssertIsTrue();
         blessed.Lifetime.IsDead.AssertIsFalse();
 
+        // transition to limbo
         var limbod = new LimboLife();
-        using (limbod) {
-            limbod.Lifetime.IsImmortal.AssertIsFalse();
-            limbod.Lifetime.IsDead.AssertIsFalse();
-        }
+        limbod.Lifetime.IsImmortal.AssertIsFalse();
+        limbod.Lifetime.IsDead.AssertIsFalse();
+        limbod.Dispose();
+        GC.Collect();
         limbod.Lifetime.IsImmortal.AssertIsFalse();
         limbod.Lifetime.IsDead.AssertIsFalse();
     }
 
-    private static void AssertWhenX(Func<Lifetime, Task> func, bool whenDead, bool whenImmortal) {
+    [TestMethod]
+    public void WhenSet() {
+        WhenSetHelper(e => e.WhenImmortalTask(), false, true);
+        WhenSetHelper(e => e.WhenDeadTask(), true, false);
+        WhenSetHelper(e => e.WhenDeadOrImmortalTask(), true, true);
+    }
+    private static void WhenSetHelper(Func<Lifetime, Task> func, bool whenDead, bool whenImmortal) {
         // called when immortal?
-        var blessed = new BlessedLife();
-        var blessedLife = func(blessed.Lifetime);
-        blessed.Dispose();
+        var blessed = new LifetimeSource();
+        var preBlessedLife = func(blessed.Lifetime);
+        blessed.ImmortalizeLifetime();
         var bt = new[] {
             func(Lifetime.Immortal),
             func(blessed.Lifetime),
-            blessedLife
+            preBlessedLife
         };
         if (whenImmortal) {
             Task.WhenAll(bt).AssertRanToCompletion();
@@ -112,11 +111,11 @@ public class LifetimeTest {
         }
 
         // called when dead?
-        var doomed = new DoomedLife();
-        var doomedLife = func(doomed.Lifetime);
-        doomed.Dispose();
+        var doomed = new LifetimeSource();
+        var preDoomedLife = func(doomed.Lifetime);
+        doomed.EndLifetime();
         var dt = new[] {
-            doomedLife, 
+            preDoomedLife, 
             func(doomed.Lifetime),
             func(Lifetime.Dead)
         };
@@ -128,18 +127,12 @@ public class LifetimeTest {
 
         // never called from limbo
         var limboed = new LimboLife();
-        var limboLife = limboed.Lifetime.WhenDeadTask();
+        var preLimboLife = limboed.Lifetime.WhenDeadTask();
         limboed.Dispose();
         Task.WhenAny(
-            limboLife,
+            preLimboLife,
             func(limboed.Lifetime)
         ).AssertNotCompleted();
-    }
-    [TestMethod]
-    public void WhenSet() {
-        AssertWhenX(e => e.WhenImmortalTask(), false, true);
-        AssertWhenX(e => e.WhenDeadTask(), true, false);
-        AssertWhenX(e => e.WhenNotMortalTask(), true, true);
     }
 
     [TestMethod]
