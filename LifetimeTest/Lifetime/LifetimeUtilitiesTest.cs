@@ -129,21 +129,20 @@ public class LifetimeUtilitiesTest {
     }
 
     [TestMethod]
-    public void CreateDependentSource() {
-        // death propagates
+    public void CreateDependentSource_Death() {
         var d1 = new LifetimeSource();
         var d2 = d1.Lifetime.CreateDependentSource();
         var d3 = d2.Lifetime.CreateDependentSource();
         d2.Lifetime.IsMortal.AssertIsTrue();
         d3.Lifetime.IsMortal.AssertIsTrue();
-        
+
         d2.EndLifetime();
         d2.Lifetime.IsDead.AssertIsTrue();
         d3.Lifetime.IsDead.AssertIsTrue();
-        
-        d1.Lifetime.IsMortal.AssertIsTrue();
 
-        // immortality doesn't propagate, but might clash
+        d1.Lifetime.IsMortal.AssertIsTrue();
+    }
+    public void CreateDependentSource_Immortality() {
         var i1 = new LifetimeSource();
         var i2 = i1.Lifetime.CreateDependentSource();
         var i3 = i2.Lifetime.CreateDependentSource();
@@ -155,15 +154,22 @@ public class LifetimeUtilitiesTest {
         i3.Lifetime.IsMortal.AssertIsTrue();
         i3.ImmortalizeLifetime();
         i3.Lifetime.IsImmortal.AssertIsTrue();
-        
+
         i1.Lifetime.IsMortal.AssertIsTrue();
         TestUtil.ExpectException<InvalidOperationException>(i1.EndLifetime);
         i1.Lifetime.IsDead.AssertIsTrue();
+    }
+    public void CreateDependentSource_Garbage() {
+        // an independent source will keep dependents alive
+        var independent = new LifetimeSource();
+        new Func<LifetimeSource>(() => independent.Lifetime.CreateDependentSource())
+            .AssertNotCollectedAfter(e => e);
+        independent.Lifetime.IsMortal.AssertIsTrue();
 
-        // collection is allowed
-        new Func<LifetimeSource>(() => new LifetimeSource()).AssertCollectedAfter(src => src.Lifetime.CreateDependentSource());
-        var c1 = new LifetimeSource();
-        new Func<LifetimeSource>(() => c1.Lifetime.CreateDependentSource()).AssertNotCollectedAfter(e => e);
-        GC.KeepAlive(c1);
+        // a dependent source does not keep its dependency alive
+        LifetimeSource dependent = null;
+        new Func<LifetimeSource>(() => new LifetimeSource())
+            .AssertCollectedAfter(e => dependent = e.Lifetime.CreateDependentSource());
+        dependent.Lifetime.IsMortal.AssertIsTrue();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -210,5 +211,109 @@ public class LifetimeAndSourceTest {
         f.AssertNotCollectedAfter(e => mortal.Lifetime.WhenDead(e, mortal.Lifetime));
 
         GC.KeepAlive(mortal);
+    }
+
+    [TestMethod]
+    public void LifetimeDeathReentrancy() {
+        var r = new LifetimeSource();
+        var r2 = new LifetimeSource();
+        r.Lifetime.WhenDead(r2.EndLifetime, r2.Lifetime);
+        r.Lifetime.WhenDead(r.EndLifetime);
+        r.EndLifetime();
+    }
+
+    [TestMethod]
+    public void LifetimeDeathConcurrency() {
+        var repeats = 20;
+        foreach (var repeat in Enumerable.Range(0, repeats)) {
+            LifetimeDeathConcurrency_Attempt(threadCount: 4, callbackCount: 10000);
+        }
+    }
+    private static void LifetimeDeathConcurrency_Attempt(int threadCount, int callbackCount) {
+        var n = 0;
+        var source = new LifetimeSource();
+        var threads =
+            Enumerable.Range(0, threadCount)
+            .Select(e => new Thread(() => {
+                foreach (var i in Enumerable.Range(0, callbackCount)) {
+                    source.Lifetime.WhenDead(() => Interlocked.Increment(ref n));
+                }
+                source.EndLifetime();
+            }))
+            .ToArray();
+        
+        foreach (var thread in threads)
+            thread.Start();
+        foreach (var thread in threads)
+            thread.Join();
+        
+        n.AssertEquals(callbackCount * threadCount);
+    }
+
+    [TestMethod]
+    public void LifetimeConditionalConcurrency() {
+        var repeats = 20;
+        foreach (var repeat in Enumerable.Range(0, repeats)) {
+            LifetimeConditionalConcurrency_Attempt(threadCount: 4, callbackCount: 9000);
+        }
+    }
+    private static void LifetimeConditionalConcurrency_Attempt(int threadCount, int callbackCount) {
+        var n = 0;
+        var sources = new[] {
+            new LifetimeSource(),
+            new LifetimeSource(),
+            new LifetimeSource()
+        };
+        var threads =
+            Enumerable.Range(0, threadCount)
+            .Select(e => new Thread(() => {
+                foreach (var i in Enumerable.Range(0, callbackCount)) {
+                    var i1 = i % 3;
+                    var i2 = (i/3)%2;
+                    if (i1 <= i2) i2 += 1;
+                    sources[i1].Lifetime.WhenDead(() => Interlocked.Increment(ref n), sources[i2].Lifetime);
+                }
+                sources[0].EndLifetime();
+            }))
+            .ToArray();
+
+        foreach (var thread in threads)
+            thread.Start();
+        foreach (var thread in threads)
+            thread.Join();
+        
+        n.AssertEquals(callbackCount * threadCount * 2 / 6);
+        sources[1].EndLifetime();
+        n.AssertEquals(callbackCount * threadCount * 3 / 6);
+        sources[2].EndLifetime();
+        n.AssertEquals(callbackCount * threadCount * 3 / 6);
+    }
+
+    [TestMethod]
+    public void LifetimeImmortalityConcurrency() {
+        var repeats = 20;
+        foreach (var repeat in Enumerable.Range(0, repeats)) {
+            LifetimeImmortalityConcurrency_Attempt(threadCount: 4, callbackCount: 10000);
+        }
+    }
+    private static void LifetimeImmortalityConcurrency_Attempt(int threadCount, int callbackCount) {
+        var n = 0;
+        var source = new LifetimeSource();
+        var threads =
+            Enumerable.Range(0, threadCount)
+            .Select(e => new Thread(() => {
+                foreach (var i in Enumerable.Range(0, callbackCount)) {
+                    source.Lifetime.WhenDead(() => Interlocked.Increment(ref n));
+                }
+                source.ImmortalizeLifetime();
+            }))
+            .ToArray();
+
+        foreach (var thread in threads)
+            thread.Start();
+        foreach (var thread in threads)
+            thread.Join();
+
+        n.AssertEquals(0);
     }
 }
