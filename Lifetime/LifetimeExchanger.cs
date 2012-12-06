@@ -1,21 +1,35 @@
-using System;
 using System.Threading;
 
 namespace TwistedOak.Util {
-    public sealed class LifetimeExchanger : IDisposable {
+    ///<summary>Creates lifetimes when requested, ending them when the next lifetime is requested.</summary>
+    public sealed class LifetimeExchanger {
         private LifetimeSource _active;
-        public Lifetime StartNextAndEndPrevious() {
+        
+        ///<summary>Returns a newly created mortal lifetime after killing the previously created lifetime (if any).</summary>
+        public Lifetime StartNextAndEndPreviousLifetime() {
             var next = new LifetimeSource();
-            var prev = Interlocked.Exchange(ref this._active, next);
+            var prev = Interlocked.Exchange(ref _active, next);
             if (prev != null) prev.EndLifetime();
             return next.Lifetime;
         }
-        public void EndPrevious() {
-            var prev = Interlocked.Exchange(ref this._active, null);
+
+        ///<summary>Returns a newly created mortal lifetime after giving eternal life to the previously created lifetime (if any).</summary>
+        public Lifetime StartNextAndImmortalizePreviousLifetime() {
+            var next = new LifetimeSource();
+            var prev = Interlocked.Exchange(ref _active, next);
+            if (prev != null) prev.ImmortalizeLifetime();
+            return next.Lifetime;
+        }
+
+        ///<summary>Kills the previously created lifetime (if any).</summary>
+        public void EndPreviousLifetime() {
+            var prev = Interlocked.Exchange(ref _active, null);
             if (prev != null) prev.EndLifetime();
         }
-        public void Dispose() {
-            this._active.GiveEternalLifetime();
+        ///<summary>Gives eternal life to the previously created lifetime (if any).</summary>
+        public void ImmortalizePreviousLifetime() {
+            var prev = Interlocked.Exchange(ref _active, null);
+            if (prev != null) prev.ImmortalizeLifetime();
         }
     }
 }

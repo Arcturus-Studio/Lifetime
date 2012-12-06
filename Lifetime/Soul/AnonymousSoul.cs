@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TwistedOak.Util {
+namespace TwistedOak.Util.Soul {
     ///<summary>A soul implemented by delegates passed to its constructor.</summary>
     internal sealed class AnonymousSoul : ISoul {
         private readonly Func<Phase> _phase;
@@ -12,9 +12,9 @@ namespace TwistedOak.Util {
             this._register = register;
         }
 
-        public Phase Phase { get { return _phase(); } }
+        public Phase Phase { get { return this._phase(); } }
         public RegistrationRemover Register(Action action) {
-            return _register(action);
+            return this._register(action);
         }
     }
 }

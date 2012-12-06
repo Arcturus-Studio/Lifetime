@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TwistedOak.Util {
+namespace TwistedOak.Util.Soul {
     ///<summary>A doubly-linked list node for a circular linked list.</summary>
     internal sealed class DoublyLinkedNode<T> {
         private DoublyLinkedNode<T> _next;
@@ -23,15 +23,15 @@ namespace TwistedOak.Util {
             this._item = item;
             this._next = next;
             this._prev = next._prev;
-            _prev._next = this;
-            _next._prev = this;
+            this._prev._next = this;
+            this._next._prev = this;
         }
 
         ///<summary>Removes the node from any list it is in, linking it to itself instead.</summary>
         public void Unlink() {
-            _prev._next = _next;
-            _next._prev = _prev;
-            _next = _prev = this;
+            this._prev._next = this._next;
+            this._next._prev = this._prev;
+            this._next = this._prev = this;
         }
 
         ///<summary>Enumerates all the nodes, except this one, that are in the same circular linked list.</summary>

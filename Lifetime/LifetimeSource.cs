@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using TwistedOak.Util.Soul;
 
 namespace TwistedOak.Util {
     /// <summary>
     /// Controls the fate of an exposed lifetime.
-    /// The exposed lifetime dies or becomes immortal when the EndLifetime or GiveEternalLifetime methods are called, respectively.
+    /// The exposed lifetime dies or becomes immortal when the EndLifetime or ImmortalizeLifetime methods are called, respectively.
     /// When a source is garbage collected without killing or immortalizing its exposed lifetime, the exposed lifetime becomes stuck in mortal limbo.
     /// </summary>
     [DebuggerDisplay("{ToString()}")]
@@ -33,11 +34,12 @@ namespace TwistedOak.Util {
         /// No effect when the exposed lifetime is already immortal.
         /// Invalid operation when the exposed lifetime is dead.
         /// </summary>
-        public void GiveEternalLifetime() {
+        public void ImmortalizeLifetime() {
             GC.SuppressFinalize(this);
             _soul.TransitionPermanently(Phase.Immortal);
         }
 
+        ///<summary>Permanently transitions the source's exposed lifetime from mortal to limbo.</summary>
         ~LifetimeSource() {
             _soul.TransitionPermanently(Phase.Limbo);
         }

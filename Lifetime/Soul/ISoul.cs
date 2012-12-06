@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TwistedOak.Util {
+namespace TwistedOak.Util.Soul {
     internal delegate void RegistrationRemover();
 
     ///<summary>The internal representation of a lifetime.</summary>

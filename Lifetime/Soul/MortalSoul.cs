@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TwistedOak.Util {
+namespace TwistedOak.Util.Soul {
     ///<summary>A soul that can be transitioned from mortal to some other phase.</summary>
     internal sealed class MortalSoul : ISoul {
         ///<summary>Callbacks to run when the lifetime is killed, immortalized, or enters limbo.</summary>
@@ -9,7 +9,7 @@ namespace TwistedOak.Util {
         public Phase Phase { get; private set; }
         
         public MortalSoul() {
-            Phase = Phase.Mortal;
+            this.Phase = Phase.Mortal;
         }
 
         /// <summary>
@@ -22,15 +22,15 @@ namespace TwistedOak.Util {
             DoublyLinkedNode<Action> callbacks;
             lock (this) {
                 // transition
-                if (Phase == newPhase)
+                if (this.Phase == newPhase)
                     return;
-                if (Phase != Phase.Mortal)
-                    throw new InvalidOperationException(String.Format("Can't transition from {0} to {1}", Phase, newPhase));
-                Phase = newPhase;
+                if (this.Phase != Phase.Mortal)
+                    throw new InvalidOperationException(String.Format("Can't transition from {0} to {1}", this.Phase, newPhase));
+                this.Phase = newPhase;
 
                 // callbacks
-                callbacks = _callbacks;
-                _callbacks = null;
+                callbacks = this._callbacks;
+                this._callbacks = null;
             }
             if (callbacks != null)
                 foreach (var callback in callbacks.EnumerateOthers())
@@ -47,14 +47,14 @@ namespace TwistedOak.Util {
             WeakReference weakNode;
             lock (this) {
                 // safe check for already finished
-                if (Phase != Phase.Mortal) {
+                if (this.Phase != Phase.Mortal) {
                     action();
-                    return SoulUtils.EmptyRemover;
+                    return Soul.EmptyRemover;
                 }
 
                 // add callback for when finished
-                if (_callbacks == null) _callbacks = DoublyLinkedNode<Action>.CreateEmptyCycle();
-                weakNode = new WeakReference(_callbacks.Prepend(action));
+                if (this._callbacks == null) this._callbacks = DoublyLinkedNode<Action>.CreateEmptyCycle();
+                weakNode = new WeakReference(this._callbacks.Prepend(action));
             }
 
             // cleanup action that removes the registration

@@ -47,7 +47,7 @@ public class LifetimeTest {
     internal sealed class BlessedLife : IDisposable {
         private readonly LifetimeSource _source = new LifetimeSource();
         public Lifetime Lifetime { get { return this._source.Lifetime; } }
-        public void Dispose() { _source.GiveEternalLifetime(); }
+        public void Dispose() { _source.ImmortalizeLifetime(); }
     }
     internal sealed class LimboLife : IDisposable {
         private LifetimeSource _source = new LifetimeSource();

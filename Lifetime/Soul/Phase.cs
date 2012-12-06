@@ -1,4 +1,4 @@
-﻿namespace TwistedOak.Util {
+﻿namespace TwistedOak.Util.Soul {
     ///<summary>A state of life.</summary>
     internal enum Phase {
         /// <summary>The transient living state preceeding either death, immortality, or limbo.</summary>

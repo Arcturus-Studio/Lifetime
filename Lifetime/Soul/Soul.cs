@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 
-namespace TwistedOak.Util {
+namespace TwistedOak.Util.Soul {
     ///<summary>Utility methods for working with souls</summary>
-    internal static class SoulUtils {
+    internal static class Soul {
         public static readonly RegistrationRemover EmptyRemover = () => { };
 
         private static ISoul MakePermanentSoul(Phase phase) {
@@ -36,11 +36,15 @@ namespace TwistedOak.Util {
         }
         ///<summary>Returns a lifetime with a collapsing soul wrapping the given soul.</summary>
         public static Lifetime AsCollapsingLifetime(this ISoul soul) {
+            // avoid any wrapping if possible
+            var p = soul.Phase;
+            if (p != Phase.Mortal) return p.AsPermanentLifetime();
+
             return new Lifetime(new CollapsingSoul(soul));
         }
 
         ///<summary>Registers callbacks to each soul, ensuring everything is cleaned up properly upon completion.</summary>
-        public static RegistrationRemover InterdependentRegister(ISoul soul1, Func<bool> tryComplete1, ISoul soul2, Func<bool> tryComplete2) {
+        public static RegistrationRemover InterdependentRegister(this ISoul soul1, Func<bool> tryComplete1, ISoul soul2, Func<bool> tryComplete2) {
             if (soul1 == null) throw new ArgumentNullException("soul1");
             if (tryComplete1 == null) throw new ArgumentNullException("tryComplete1");
             if (soul2 == null) throw new ArgumentNullException("soul2");
@@ -90,14 +94,28 @@ namespace TwistedOak.Util {
             if (ReferenceEquals(dependentSoul, necessarySoul))
                 necessarySoul = ImmortalSoul;
 
-            return InterdependentRegister(
-                dependentSoul,
+            return dependentSoul.InterdependentRegister(
                 () => {
                     action();
                     return true;
                 },
                 necessarySoul,
                 () => necessarySoul.Phase == Phase.Dead);
+        }
+
+        ///<summary>Combines two souls by using a custom function to combine their phases.</summary>
+        public static ISoul Combine(this ISoul soul1, ISoul soul2, Func<Phase, Phase, Phase> phaseCombiner) {
+            Func<Phase> getPhase = () => phaseCombiner(soul1.Phase, soul2.Phase);
+            return new AnonymousSoul(
+                getPhase,
+                action => {
+                    Func<bool> tryComplete = () => {
+                        var hasPhase = getPhase() != Phase.Mortal;
+                        if (hasPhase) action();
+                        return hasPhase;
+                    };
+                    return soul1.InterdependentRegister(tryComplete, soul2, tryComplete);
+                });
         }
     }
 }

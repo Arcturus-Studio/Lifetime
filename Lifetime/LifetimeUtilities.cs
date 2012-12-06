@@ -1,5 +1,4 @@
-using System;
-using System.Threading;
+using TwistedOak.Util.Soul;
 
 namespace TwistedOak.Util {
     ///<summary>Utility classes for manipulating lifetimes.</summary>
@@ -31,33 +30,38 @@ namespace TwistedOak.Util {
 
         ///<summary>Returns a lifetime that dies when either of the given lifetimes dies or becomes immortal when both of the given lifetimes become immortal.</summary>
         public static Lifetime Min(this Lifetime lifetime1, Lifetime lifetime2) {
-            var s1 = lifetime1.Soul;
-            var s2 = lifetime2.Soul;
-            Func<Phase> minPhase = () => {
-                var p1 = s1.Phase;
-                var p2 = s2.Phase;
-                if (p1 == Phase.Dead || p2 == Phase.Dead) return Phase.Dead;
-                if (p1 == Phase.Mortal || p2 == Phase.Mortal) return Phase.Mortal;
-                if (p1 == Phase.Limbo || p2 == Phase.Limbo) return Phase.Limbo;
-                return Phase.Immortal;
-            };
-            
-            return new AnonymousSoul(
-                minPhase,
-                action => {
-                    Func<bool> tryComplete = () => {
-                        var b = minPhase() != Phase.Mortal;
-                        if (b) action();
-                        return b;
-                    };
-                    return SoulUtils.InterdependentRegister(s1, tryComplete, s2, tryComplete);
+            // try to avoid any wrapping at all
+            if (lifetime1.IsImmortal) return lifetime2;
+            if (lifetime2.IsImmortal) return lifetime1;
+
+            return lifetime1.Soul.Combine(
+                lifetime2.Soul,
+                (p1, p2) => {
+                    // dead < mortal < limbo < immortal
+                    if (p1 == Phase.Dead || p2 == Phase.Dead) return Phase.Dead;
+                    if (p1 == Phase.Mortal || p2 == Phase.Mortal) return Phase.Mortal;
+                    if (p1 == Phase.Limbo || p2 == Phase.Limbo) return Phase.Limbo;
+                    return Phase.Immortal;
                 }
             ).AsCollapsingLifetime();
         }
 
         ///<summary>Returns a lifetime that becomes immortal when either of the given lifetimes becomes immortal or dies when both of the given lifetimes die.</summary>
         public static Lifetime Max(this Lifetime lifetime1, Lifetime lifetime2) {
-            return lifetime1.Opposite().Min(lifetime2.Opposite()).Opposite();
+            // try to avoid any wrapping at all
+            if (lifetime1.IsDead) return lifetime2;
+            if (lifetime2.IsDead) return lifetime1;
+
+            return lifetime1.Soul.Combine(
+                lifetime2.Soul,
+                (p1, p2) => {
+                    // immortal > mortal > limbo > dead
+                    if (p1 == Phase.Immortal || p2 == Phase.Immortal) return Phase.Immortal;
+                    if (p1 == Phase.Mortal || p2 == Phase.Mortal) return Phase.Mortal;
+                    if (p1 == Phase.Limbo || p2 == Phase.Limbo) return Phase.Limbo;
+                    return Phase.Dead;
+                }
+            ).AsCollapsingLifetime();
         }
     }
 }
