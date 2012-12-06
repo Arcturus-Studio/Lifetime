@@ -60,7 +60,8 @@ namespace TwistedOak.Util.Soul {
             // cleanup action that removes the registration
             return () => {
                 var n = (DoublyLinkedNode<Action>)weakNode.Target;
-                if (n != null) n.Unlink();
+                if (n == null) return;
+                lock (this) n.Unlink();
             };
         }
     }
