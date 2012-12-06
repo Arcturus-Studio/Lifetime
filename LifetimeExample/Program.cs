@@ -37,11 +37,13 @@ public static class Program {
         "Using callbacks to inspect a lifetime as it is killed:".WriteLine();
         var lifesource3 = new LifetimeSource();
         "Life #3: {0}".WriteLine(lifesource3);
-        lifesource3.Lifetime.WhenDead(() => "(before) WhenDead Life #3: {0}".WriteLine(lifesource3));
+        "Registering WhenDead Life #3 (before)".WriteLine();
+        lifesource3.Lifetime.WhenDead(() => "WhenDead Life #3 (before)".WriteLine());
         "Ending Life #3".WriteLine();
         lifesource3.EndLifetime();
         "Life #3: {0}".WriteLine(lifesource3);
-        lifesource3.Lifetime.WhenDead(() => "(after) WhenDead Life #3: {0}".WriteLine(lifesource3));
+        "Registering WhenDead Life #3 (after)".WriteLine();
+        lifesource3.Lifetime.WhenDead(() => "WhenDead Life #3 (after)".WriteLine());
         Break();
 
         ///////////////////////////////////////////////////

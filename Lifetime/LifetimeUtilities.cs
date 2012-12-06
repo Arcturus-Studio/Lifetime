@@ -38,5 +38,15 @@ namespace TwistedOak.Util {
                 }
             ).AsCollapsingLifetime();
         }
+
+        /// <summary>
+        /// Returns a new lifetime source that automatically kills its exposed lifetime if the given lifetime dies.
+        /// Note: If the given lifetimes has died or will die then using ImmortalizeLifetime on the result will eventually cause an InvalidOperationException.
+        /// </summary>
+        public static LifetimeSource CreateDependentSource(this Lifetime lifetime) {
+            var dependentResult = new LifetimeSource();
+            lifetime.WhenDead(dependentResult.EndLifetime, dependentResult.Lifetime);
+            return dependentResult;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace TwistedOak.Util.Soul {
     ///<summary>An initially mortal soul that can be manually killed or immortalized.</summary>
@@ -19,7 +20,7 @@ namespace TwistedOak.Util.Soul {
         /// </summary>
         public void TransitionPermanently(Phase newPhase) {
             if (newPhase == Phase.Mortal) throw new ArgumentOutOfRangeException("newPhase");
-            DoublyLinkedNode<Action> callbacks;
+            Action[] callbacks;
             lock (this) {
                 // transition
                 if (Phase == newPhase)
@@ -29,11 +30,11 @@ namespace TwistedOak.Util.Soul {
                 Phase = newPhase;
 
                 // callbacks
-                callbacks = _callbacks;
+                callbacks = _callbacks == null ? null : _callbacks.EnumerateOthers().ToArray();
                 _callbacks = null;
             }
             if (callbacks != null)
-                foreach (var callback in callbacks.EnumerateOthers())
+                foreach (var callback in callbacks)
                     callback.Invoke();
         }
 

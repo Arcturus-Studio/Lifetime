@@ -127,4 +127,43 @@ public class LifetimeUtilitiesTest {
             return Tuple.Create(life1, life2, life3);
         });
     }
+
+    [TestMethod]
+    public void CreateDependentSource() {
+        // death propagates
+        var d1 = new LifetimeSource();
+        var d2 = d1.Lifetime.CreateDependentSource();
+        var d3 = d2.Lifetime.CreateDependentSource();
+        d2.Lifetime.IsMortal.AssertIsTrue();
+        d3.Lifetime.IsMortal.AssertIsTrue();
+        
+        d2.EndLifetime();
+        d2.Lifetime.IsDead.AssertIsTrue();
+        d3.Lifetime.IsDead.AssertIsTrue();
+        
+        d1.Lifetime.IsMortal.AssertIsTrue();
+
+        // immortality doesn't propagate, but might clash
+        var i1 = new LifetimeSource();
+        var i2 = i1.Lifetime.CreateDependentSource();
+        var i3 = i2.Lifetime.CreateDependentSource();
+
+        i3.Lifetime.IsMortal.AssertIsTrue();
+        i2.ImmortalizeLifetime();
+        i2.Lifetime.IsImmortal.AssertIsTrue();
+
+        i3.Lifetime.IsMortal.AssertIsTrue();
+        i3.ImmortalizeLifetime();
+        i3.Lifetime.IsImmortal.AssertIsTrue();
+        
+        i1.Lifetime.IsMortal.AssertIsTrue();
+        TestUtil.ExpectException<InvalidOperationException>(i1.EndLifetime);
+        i1.Lifetime.IsDead.AssertIsTrue();
+
+        // collection is allowed
+        new Func<LifetimeSource>(() => new LifetimeSource()).AssertCollectedAfter(src => src.Lifetime.CreateDependentSource());
+        var c1 = new LifetimeSource();
+        new Func<LifetimeSource>(() => c1.Lifetime.CreateDependentSource()).AssertNotCollectedAfter(e => e);
+        GC.KeepAlive(c1);
+    }
 }
