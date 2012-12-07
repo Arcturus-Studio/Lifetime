@@ -12,8 +12,8 @@ namespace TwistedOak.Util.Soul {
         /// </summary>
         public static ISoul AsPermanentSoul(this Phase phase) {
             return phase == Phase.Dead 
-                 ? PermanentSoul.Dead 
-                 : PermanentSoul.Immortal;
+                 ? DeadSoul.Instance 
+                 : ImmortalSoul.Instance;
         }
         /// <summary>
         /// Returns a lifetime permanently stuck in the given phase.
@@ -68,7 +68,7 @@ namespace TwistedOak.Util.Soul {
 
             // when the necessary soul is the same soul as the dependent soul, assume the callback invocation will beat the registration removal
             if (ReferenceEquals(soul, necessarySoul))
-                necessarySoul = PermanentSoul.Immortal;
+                necessarySoul = ImmortalSoul.Instance;
 
             // avoid wrapping when possible
             if (necessarySoul.Phase == Phase.Dead)
