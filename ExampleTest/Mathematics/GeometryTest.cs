@@ -16,6 +16,36 @@ public class GeometryTest {
     private static readonly ConvexPolygon Tri0UxUy = new ConvexPolygon(new[] { P00, P10, P01 });
 
     [TestMethod]
+    public void Normal() {
+        new Vector(2, 0).Normal().AssertEquals(new Vector(1, 0));
+        new Vector(-2, 0).Normal().AssertEquals(new Vector(-1, 0));
+        new Vector(0, 2).Normal().AssertEquals(new Vector(0, 1));
+        new Vector(0, 0).Normal().AssertEquals(new Vector(0, 0));
+    }
+    [TestMethod]
+    public void Cross() {
+        new Vector(0, 1).Cross(new Vector(0, 1)).AssertEquals(0);
+        new Vector(1, 0).Cross(new Vector(0, 1)).AssertEquals(1);
+        new Vector(0, 1).Cross(new Vector(1, 0)).AssertEquals(-1);
+        new Vector(0, 1).Cross(new Vector(2, 0)).AssertEquals(-2);
+    }
+    [TestMethod]
+    public void ScalarProjectOnto() {
+        new Vector(0, 2).ScalarProjectOnto(new Vector(0, 3)).AssertEquals(2);
+        new Vector(4, 2).ScalarProjectOnto(new Vector(0, 3)).AssertEquals(2);
+    }
+    [TestMethod]
+    public void ProjectOnto() {
+        new Vector(0, 2).ProjectOnto(new Vector(0, 3)).AssertEquals(new Vector(0, 2));
+        new Vector(4, 2).ProjectOnto(new Vector(0, 3)).AssertEquals(new Vector(0, 2));
+    }
+    [TestMethod]
+    public void PerpOnto() {
+        new Vector(0, 2).PerpOnto(new Vector(0, 3)).AssertEquals(new Vector(0, 0));
+        new Vector(4, 2).PerpOnto(new Vector(0, 3)).AssertEquals(new Vector(4, 0));
+    }
+
+    [TestMethod]
     public void LineSegmentProperties() {
         var line = P01.To(P10);
         line.Start.AssertEquals(P01);
