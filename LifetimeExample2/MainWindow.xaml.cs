@@ -9,16 +9,6 @@ using System.Reactive.Linq;
 using LineSegment = LifetimeExample.Mathematics.LineSegment;
 
 namespace LifetimeExample2 {
-    public static class Util {
-        public static double MinDistanceFromPointToLineOverTime(this LineSegment targetTrajectory, LineSegment endPoint1Trajectory, LineSegment endPoint2Trajectory) {
-            var sweepOrigin = endPoint1Trajectory.Start;
-            var sweepLine = new LineSegment(endPoint2Trajectory.Start, endPoint2Trajectory.End - endPoint1Trajectory.Delta);
-            var targetLine = new LineSegment(targetTrajectory.Start, targetTrajectory.End - endPoint1Trajectory.Delta);
-
-            var triangle = new ConvexPolygon(new[] { sweepOrigin, sweepLine.Start, sweepLine.End });
-            return targetLine.DistanceTo(triangle);
-        }
-    }
     public partial class MainWindow {
         public MainWindow() {
             InitializeComponent();
@@ -41,12 +31,6 @@ namespace LifetimeExample2 {
         public class BallLine {
             public Ball Parent;
             public Ball Child;
-        }
-        private Color HueColor(double hue) {
-            var r = (byte)Math.Floor((hue.SignedModularDifference(0, 3).Abs() - 0.5)*256).Clamp(0, 255);
-            var g = (byte)Math.Floor((hue.SignedModularDifference(1, 3).Abs() - 0.5) * 256).Clamp(0, 255);
-            var b = (byte)Math.Floor((hue.SignedModularDifference(2, 3).Abs() - 0.5) * 256).Clamp(0, 255);
-            return Color.FromRgb(r, g, b);
         }
         private async void GameLoop(Lifetime gameLifetime) {
             var gameLoopActions = new PerishableCollection<Action<Iter>>();
@@ -82,7 +66,7 @@ namespace LifetimeExample2 {
                 foreach (var e in lines.CurrentItems()) {
                     var endPoint1Trajectory = new LineSegment(e.Value.Parent.LastPos, e.Value.Parent.Pos);
                     var endPoint2Trajectory = new LineSegment(e.Value.Child.LastPos, e.Value.Child.Pos);
-                    if (mouseTrajectory.MinDistanceFromPointToLineOverTime(endPoint1Trajectory, endPoint2Trajectory) > 1) continue;
+                    if (mouseTrajectory.ApproximateMinDistanceFromPointToLineOverTime(endPoint1Trajectory, endPoint2Trajectory) > 1) continue;
                     e.Value.Child.Life.EndLifetime();
                 }
             }, gameLifetime);
@@ -119,8 +103,8 @@ namespace LifetimeExample2 {
                         ball.Pos += ball.Vel * t;
 
                         // naive bounce back after going off the side
-                        var vx = ball.Vel.X.RangeBounceVelocity(ball.Pos.X, 0, grid.ActualWidth - ball.Radius);
-                        var vy = ball.Vel.Y.RangeBounceVelocity(ball.Pos.Y, 0, grid.Height - ball.Radius);
+                        var vx = ball.Vel.X.RangeBounceVelocity(ball.Pos.X, 0, (grid.ActualWidth - ball.Radius).Max(0));
+                        var vy = ball.Vel.Y.RangeBounceVelocity(ball.Pos.Y, 0, (grid.ActualHeight - ball.Radius).Max(0));
                         ball.Vel = new Vector(vx, vy);
                     },
                     life);
@@ -214,7 +198,7 @@ namespace LifetimeExample2 {
                 e => {
                     var ball = e.Value;
 
-                    var color = HueColor(ball.Hue);
+                    var color = ball.Hue.HueToApproximateColor(period: 3);
                     var ellipse = new Ellipse {
                         Width = ball.Radius * 2,
                         Height = ball.Radius * 2,

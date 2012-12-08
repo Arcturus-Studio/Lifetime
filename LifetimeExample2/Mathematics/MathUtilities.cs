@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 
 namespace LifetimeExample.Mathematics {
     ///<summary>Utility methods for working with numbers and related concepts.</summary>
@@ -24,12 +25,12 @@ namespace LifetimeExample.Mathematics {
         }
         ///<summary>Clamps a value to be not-less-than a minimum and not-larger-than a maximum.</summary>
         public static T Clamp<T>(this T value, T min, T max) where T : IComparable<T> {
-            if (max.CompareTo(min) < 0) throw new ArgumentException();
+            if (max.CompareTo(min) < 0) throw new ArgumentOutOfRangeException("max", "max < min");
             return value.Max(min).Min(max);
         }
         ///<summary>Whether a value is less than (-1), contained in (0), or greater than (1) a contiguous range defined by a minimum and a maximum.</summary>
         public static int RangeSign<T>(this T value, T min, T max) where T : IComparable<T> {
-            if (max.CompareTo(min) < 0) throw new ArgumentException();
+            if (max.CompareTo(min) < 0) throw new ArgumentOutOfRangeException("max", "max < min");
             if (value.CompareTo(min) < 0) return -1;
             if (value.CompareTo(max) > 0) return +1;
             return 0;
@@ -75,6 +76,30 @@ namespace LifetimeExample.Mathematics {
         ///<summary>Enumerates the lines between consecutive points, including the line between the last and first point.</summary>
         public static IEnumerable<LineSegment> CycleLines(this IEnumerable<Point> items) {
             return items.CyclePairs().Select(e => new LineSegment(e.Item1, e.Item2));
+        }
+        ///<summary>Enumerates the integers in [0, count) in increasing order from 0 to count-1.</summary>
+        public static IEnumerable<int> Range(this int count) {
+            return Enumerable.Range(0, count);
+        } 
+
+        /// <summary>
+        /// The approximated closest that a point comes to a line over time.
+        /// The approximation may be far too low, but not too high.
+        /// </summary>
+        public static double ApproximateMinDistanceFromPointToLineOverTime(this LineSegment targetTrajectory, LineSegment endPoint1Trajectory, LineSegment endPoint2Trajectory) {
+            var sweepOrigin = endPoint1Trajectory.Start;
+            var sweepLine = new LineSegment(endPoint2Trajectory.Start, endPoint2Trajectory.End - endPoint1Trajectory.Delta);
+            var targetLine = new LineSegment(targetTrajectory.Start, targetTrajectory.End - endPoint1Trajectory.Delta);
+
+            var triangle = new ConvexPolygon(new[] { sweepOrigin, sweepLine.Start, sweepLine.End });
+            return targetLine.DistanceTo(triangle);
+        }
+        ///<summary>A color with a hue based on the given value, cycling around the color wheel with the given period.</summary>
+        public static Color HueToApproximateColor(this double hue, double period) {
+            var rgb = 3.Range().Select(i => 
+                (1 - period/2 + hue.SignedModularDifference(i*period/3, period).Abs()).ProportionToByte()
+            ).ToArray();
+            return Color.FromRgb(rgb[0], rgb[1], rgb[2]);
         }
     }
 }
