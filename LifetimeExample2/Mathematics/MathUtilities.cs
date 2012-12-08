@@ -101,5 +101,37 @@ namespace LifetimeExample.Mathematics {
             ).ToArray();
             return Color.FromRgb(rgb[0], rgb[1], rgb[2]);
         }
+
+        public static TimeSpan Seconds(this double totalSeconds) {
+            return TimeSpan.FromSeconds(totalSeconds);
+        }
+        public static TimeSpan Seconds(this int totalSeconds) {
+            return TimeSpan.FromSeconds(totalSeconds);
+        }
+        public static TimeSpan Milliseconds(this double totalMilliSeconds) {
+            return TimeSpan.FromMilliseconds(totalMilliSeconds);
+        }
+        public static TimeSpan Milliseconds(this int totalMilliSeconds) {
+            return TimeSpan.FromMilliseconds(totalMilliSeconds);
+        }
+        public static double LerpTo(this double valueAt0, double valueAt1, double proportion) {
+            return valueAt1 * proportion + valueAt0 * (1 - proportion);
+        }
+        public static double LerpTo(this int valueAt0, double valueAt1, double proportion) {
+            return ((double)valueAt0).LerpTo(valueAt1, proportion);
+        }
+        public static Byte LerpTo(this byte valueAt0, byte valueAt1, double proportion) {
+            return (byte)Math.Round(((double)valueAt0).LerpTo(valueAt1, proportion).Clamp(0, 255));
+        }
+        public static Color LerpTo(this Color valueAt0, Color valueAt1, double proportion) {
+            return Color.FromArgb(
+                valueAt0.A.LerpTo(valueAt1.A, proportion),
+                valueAt0.R.LerpTo(valueAt1.R, proportion),
+                valueAt0.G.LerpTo(valueAt1.G, proportion),
+                valueAt0.B.LerpTo(valueAt1.B, proportion));
+        }
+        public static Color LerpToTransparent(this Color color, double proportion) {
+            return color.LerpTo(Color.FromArgb(0, color.R, color.G, color.B) , proportion);
+        }
     }
 }
