@@ -70,9 +70,16 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GameMechanics\Ball.cs" />
+    <Compile Include="GameMechanics\BallLine.cs" />
     <Compile Include="Collections\Perishable.cs" />
     <Compile Include="Collections\PerishableCollection.cs" />
     <Compile Include="Collections\PerishableUtilities.cs" />
+    <Compile Include="GameMechanics\GameMechanicUtilities.cs" />
+    <Compile Include="GameMechanics\GameDrawAsControlsUtilities.cs" />
+    <Compile Include="GameMechanics\GameAnimationUtilities.cs" />
+    <Compile Include="GameMechanics\Game.cs" />
+    <Compile Include="GameMechanics\Iter.cs" />
     <Compile Include="Mathematics\ConvexPolygon.cs" />
     <Compile Include="Mathematics\MathUtilities.cs" />
     <Compile Include="Mathematics\LineSegment.cs" />

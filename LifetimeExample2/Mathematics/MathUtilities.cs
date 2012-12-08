@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using TwistedOak.Util;
 
 namespace LifetimeExample.Mathematics {
     ///<summary>Utility methods for working with numbers and related concepts.</summary>
@@ -132,6 +133,15 @@ namespace LifetimeExample.Mathematics {
         }
         public static Color LerpToTransparent(this Color color, double proportion) {
             return color.LerpTo(Color.FromArgb(0, color.R, color.G, color.B) , proportion);
+        }
+
+        public static Lifetime WhenAfterLife(this Lifetime lifetime, Func<Lifetime> action) {
+            var r = new LifetimeSource();
+            lifetime.WhenDead(() => action().WhenDead(r.EndLifetime));
+            return r.Lifetime;
+        }
+        public static Point LerpAcross(this LineSegment line, double proportion) {
+            return line.Start + line.Delta*proportion;
         }
     }
 }
