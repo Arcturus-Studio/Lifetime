@@ -7,6 +7,7 @@ namespace LifetimeExample.Mathematics {
     public struct LineSegment {
         public readonly Point Start;
         public readonly Vector Delta;
+        public Point Mid { get { return Start + Delta/2; } }
         public Point End { get { return this.Start + this.Delta; } }
         public LineSegment(Point start, Vector delta) {
             this.Start = start;

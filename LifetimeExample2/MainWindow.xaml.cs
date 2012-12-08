@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -23,7 +24,7 @@ namespace LifetimeExample2 {
         public class Game {
             public readonly PerishableCollection<Action<Iter>> LoopActions = new PerishableCollection<Action<Iter>>();
             public readonly PerishableCollection<Ball> Balls = new PerishableCollection<Ball>();
-            public readonly PerishableCollection<BallLine> BallLines = new PerishableCollection<BallLine>();
+            public readonly PerishableCollection<BallLine> Connectors = new PerishableCollection<BallLine>();
             public readonly LifetimeSource LifeSource = new LifetimeSource();
             public Lifetime Life { get { return LifeSource.Lifetime; }}
             public readonly Random Rng = new Random();
@@ -63,7 +64,7 @@ namespace LifetimeExample2 {
                     iter => {
                         remaining -= iter.dt;
                         if (remaining >= TimeSpan.Zero) {
-                            callback(iter, remaining.TotalSeconds / duration.TotalSeconds, remaining);
+                            callback(iter, 1 - remaining.TotalSeconds / duration.TotalSeconds, remaining);
                         } else {
                             life.EndLifetime();
                         }
@@ -85,28 +86,11 @@ namespace LifetimeExample2 {
         public class BallLine {
             public Ball Parent;
             public Ball Child;
+            public LineSegment Line { get { return Parent.Pos.To(Child.Pos); } }
         }
         private void GameLoop(Game game) {
-            var curMousePos = default(Point?);
-            this.MouseMove += (sender, arg) => curMousePos = arg.GetPosition(grid);
-            this.MouseLeave += (sender, arg) => curMousePos = null;
-            var prevMousePos = curMousePos;
-            game.LoopActions.Add(iter => {
-                if (!curMousePos.HasValue || !prevMousePos.HasValue) {
-                    prevMousePos = curMousePos;
-                    return;
-                }
-                var mouseTrajectory = new LineSegment(prevMousePos.Value, curMousePos.Value);
-                prevMousePos = curMousePos;
-
-                foreach (var e in game.BallLines.CurrentItems()) {
-                    var endPoint1Trajectory = new LineSegment(e.Value.Parent.LastPos, e.Value.Parent.Pos);
-                    var endPoint2Trajectory = new LineSegment(e.Value.Child.LastPos, e.Value.Child.Pos);
-                    if (mouseTrajectory.ApproximateMinDistanceFromPointToLineOverTime(endPoint1Trajectory, endPoint2Trajectory) > 1) continue;
-                    e.Value.Child.Life.EndLifetime();
-                }
-            }, game.Life);
-
+            SetupMouseCutter(game);
+            
             Func<Ball, Ball> spawnBall = null;
             spawnBall = parent => {
                 var lifeS = new LifetimeSource();
@@ -157,7 +141,7 @@ namespace LifetimeExample2 {
                                 iter => {
                                     if (game.Rng.NextDouble() > 0.01) return;
                                     var s = spawnBall(ball);
-                                    game.BallLines.Add(new BallLine { Child = s, Parent = ball }, s.Life.Lifetime);
+                                    game.Connectors.Add(new BallLine { Child = s, Parent = ball }, s.Life.Lifetime);
                                     children.Add(s, s.Life.Lifetime);
                                 },
                                 life.Min(rx));
@@ -180,53 +164,132 @@ namespace LifetimeExample2 {
                      }),
                      game.Life);
 
+            SetupDrawConnectors(game);
+            SetupDrawBalls(game);
 
-            game.BallLines.AsObservable().Subscribe(
+            game.Loop();
+        }
+
+        private Lifetime AnimateSpinningRectangleExplosion(Game game, Func<Point> position, Color color, TimeSpan duration, double rotationsPerSecond, double finalRadius) {
+            var rect = new Rectangle {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+                RenderTransformOrigin = new Point(0.5, 0.5)
+            };
+            grid.Children.Add(rect);
+            var life = game.AnimateWith(
+                duration,
+                (ix, prop, ellapsed) => {
+                    var r = 0.LerpTo(finalRadius, prop);
+                    var pt = position();
+                    rect.Width = rect.Height = r*2;
+                    rect.RenderTransform = new TransformGroup {
+                        Children = new TransformCollection {
+                            new RotateTransform(rotationsPerSecond*ellapsed.TotalSeconds*360),
+                            new TranslateTransform(pt.X - r, pt.Y - r)
+                        }
+                    };
+                    rect.Fill = new SolidColorBrush(color.LerpToTransparent(prop));
+                });
+            life.WhenDead(() => grid.Children.Remove(rect));
+            return life;
+        }
+        private void SetupMouseCutter(Game game) {
+            var CutTolerance = 1.0;
+
+            // track current mouse position
+            var liveMousePos = default(Point?);
+            this.MouseMove += (sender, arg) => liveMousePos = arg.GetPosition(grid);
+            this.MouseLeave += (sender, arg) => liveMousePos = null;
+
+            var lastUsedMousePos = liveMousePos;
+            game.LoopActions.Add(
+                iter => {
+                    // get a path between last and current mouse positions, if any
+                    var prev = lastUsedMousePos;
+                    lastUsedMousePos = liveMousePos;
+                    if (!liveMousePos.HasValue || !prev.HasValue) return;
+                    var cutPath = new LineSegment(prev.Value, liveMousePos.Value);
+                    var cur = liveMousePos.Value;
+
+                    // cut any connectors that crossed the cut path
+                    foreach (var cutConnector in from connector in game.Connectors.CurrentItems()
+                                                 let endPath1 = new LineSegment(connector.Value.Parent.LastPos, connector.Value.Parent.Pos)
+                                                 let endPath2 = new LineSegment(connector.Value.Child.LastPos, connector.Value.Child.Pos)
+                                                 where cutPath.ApproximateMinDistanceFromPointToLineOverTime(endPath1, endPath2) <= CutTolerance
+                                                 select connector) {
+                        cutConnector.Value.Child.Life.EndLifetime();
+
+                        AnimateSpinningRectangleExplosion(
+                            game,
+                            () => cur.ClosestPointOn(cutConnector.Value.Line),
+                            Colors.Red,
+                            300.Milliseconds(),
+                            20,
+                            20);
+                    }
+                },
+                game.Life);
+        }
+
+        public static void SetPosition(Line lineControl, LineSegment position) {
+            lineControl.X1 = position.Start.X;
+            lineControl.Y1 = position.Start.Y;
+            lineControl.X2 = position.End.X;
+            lineControl.Y2 = position.End.Y;
+        }
+        public static void SetPosition(Ellipse ellipseControl, Point center, double radius) {
+            ellipseControl.Width = ellipseControl.Height = radius * 2;
+            ellipseControl.RenderTransform = new TranslateTransform(center.X - radius, center.Y - radius);
+        }
+
+        private void SetupDrawConnectors(Game game) {
+            var DeathFinalThicknessFactor = 6;
+            game.Connectors.AsObservable().Subscribe(
                 e => {
-                    var ball = e.Value;
-                    var thickness = (e.Value.Parent.Radius + e.Value.Child.Radius) / 2 * 0.1;
-                    var line = new Line {
+                    var thickness = e.Value.Child.Radius * 0.1;
+
+                    // create a line control to visually represent the line
+                    var lineControl = new Line {
                         VerticalAlignment = VerticalAlignment.Top,
                         HorizontalAlignment = HorizontalAlignment.Left,
                         Stroke = new SolidColorBrush(Colors.Black),
                         StrokeThickness = thickness,
                     };
-                    grid.Children.Add(line);
+                    grid.Children.Add(lineControl);
+                    
+                    // move line control to position during each game loop, until the connector is dead
+                    game.LoopActions.Add(
+                        iter => SetPosition(lineControl, e.Value.Line),
+                        e.Lifetime);
 
-                    e.Lifetime.WhenDead(() =>
+                    // once connector is dead, expand and fade out the line control
+                    e.Lifetime.WhenDead(() => {
+                        AnimateSpinningRectangleExplosion(game, () => e.Value.Line.Mid, Colors.Orange, 200.Milliseconds(), 30, 10);
                         game.AnimateWith(
                             TimeSpan.FromSeconds(0.8),
                             (iter, prop, dt) => {
-                                line.StrokeThickness = thickness * (1 + 5 * prop);
-                                line.Stroke = new SolidColorBrush(Color.FromArgb((1 - prop).ProportionToByte(), 0, 0, 0));
-                                line.X1 = ball.Parent.Pos.X;
-                                line.Y1 = ball.Parent.Pos.Y;
+                                lineControl.StrokeThickness = thickness*1.LerpTo(DeathFinalThicknessFactor, prop);
+                                lineControl.Stroke = new SolidColorBrush(Colors.Black.LerpToTransparent(prop));
+                                SetPosition(lineControl, e.Value.Line);
                             })
-                        .WhenDead(() => grid.Children.Remove(line)));
-                    game.LoopActions.Add(
-                        iter => {
-                            line.X1 = ball.Parent.Pos.X;
-                            line.Y1 = ball.Parent.Pos.Y;
-                            line.X2 = ball.Child.Pos.X;
-                            line.Y2 = ball.Child.Pos.Y;
-                        },
-                        e.Lifetime);
+                            // once the death animation is done, discard the line control
+                            .WhenDead(() => grid.Children.Remove(lineControl));
+                    });
                 },
                 game.Life);
-
-            SetupDrawBalls(game);
-
-            game.Loop();
+            
         }
         private void SetupDrawBalls(Game game) {
             var DeathAnimationDuration = 800.Milliseconds();
-            var DeathFinalRadiusFactor = 4;
+            var DeathFinalRadiusFactor = 3;
 
             game.Balls.AsObservable().Subscribe(
                 e => {
                     var ball = e.Value;
                     var color = ball.Hue.HueToApproximateColor(period: 3);
 
+                    // create an ellipse control to visually represent the ball
                     var ellipse = new Ellipse {
                         Width = ball.Radius * 2,
                         Height = ball.Radius * 2,
@@ -236,9 +299,14 @@ namespace LifetimeExample2 {
                     };
                     grid.Children.Add(ellipse);
 
+                    if (ball.Generation == 1) {
+                        ellipse.StrokeThickness = 3;
+                        ellipse.Stroke = new SolidColorBrush(Colors.Black);
+                    }
+
                     // move ellipse control to position during each game loop, until ball is dead
                     game.LoopActions.Add(
-                        iter => ellipse.RenderTransform = new TranslateTransform(ball.Pos.X - ball.Radius, ball.Pos.Y - ball.Radius),
+                        iter => SetPosition(ellipse, ball.Pos, ball.Radius),
                         e.Lifetime);
 
                     // once ball is dead, expand and fade out the ellipse
@@ -250,8 +318,7 @@ namespace LifetimeExample2 {
                                 ellipse.Fill = new SolidColorBrush(color.LerpToTransparent(prop));
                                 // expand
                                 var radius = ball.Radius * 1.LerpTo(DeathFinalRadiusFactor, prop);
-                                ellipse.Width = ellipse.Height = radius * 2;
-                                ellipse.RenderTransform = new TranslateTransform(ball.Pos.X - radius, ball.Pos.Y - radius);
+                                SetPosition(ellipse, ball.Pos, radius);
                             })
                         // once the death animation is done, discard the ellipse control
                         .WhenDead(() => grid.Children.Remove(ellipse)));

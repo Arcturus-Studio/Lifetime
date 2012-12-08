@@ -96,5 +96,10 @@ namespace LifetimeExample.Mathematics {
         public static double DistanceTo(this ConvexPolygon polygon, LineSegment line) {
             return line.DistanceTo(polygon);
         }
+
+        ///<summary>The point on a line segment that is closest to a target point.</summary>
+        public static Point ClosestPointOn(this Point point, LineSegment line) {
+            return line.Start + line.Delta.Normal() * (point - line.Start).ScalarProjectOnto(line.Delta).Clamp(0, line.Delta.Length);
+        }
     }
 }
