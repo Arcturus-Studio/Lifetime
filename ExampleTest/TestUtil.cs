@@ -16,11 +16,18 @@ internal static class TestUtil {
         Assert.AreEqual(actual, expected);
     }
     [DebuggerStepThrough]
-    public static void AssertSequenceEquals<T>(this IEnumerable<T> actual, IEnumerable<T> expected) {
+    public static void AssertEquals(this double expected, double actual, double tolerance) {
+        Assert.AreEqual(actual, expected, tolerance);
+    }
+    [DebuggerStepThrough]
+    public static void AssertSequenceEquals<T>(this IEnumerable<T> actual, params T[] expected) {
         var r1 = actual.ToArray();
-        var r2 = expected.ToArray();
-        if (!r1.SequenceEqual(r2))
-            Assert.Fail("Sequences not equal. Expected: {0}; Actual: {1}", String.Join(",", r2), String.Join(",", r1));
+        if (!r1.SequenceEqual(expected))
+            Assert.Fail("Sequences not equal. Expected: {0}; Actual: {1}", String.Join(",", expected), String.Join(",", r1));
+    }
+    [DebuggerStepThrough]
+    public static void AssertSequenceEquals<T>(this IEnumerable<T> actual, IEnumerable<T> expected) {
+        actual.AssertSequenceEquals(expected.ToArray());
     }
     [DebuggerStepThrough]
     public static void AssertIsTrue(this bool b) {
