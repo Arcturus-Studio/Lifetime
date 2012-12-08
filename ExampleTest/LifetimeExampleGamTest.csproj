@@ -53,6 +53,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Mathematics\MathUtilitiesTest.cs" />
     <Compile Include="TestUtil.cs" />
     <Compile Include="Mathematics\GeometryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

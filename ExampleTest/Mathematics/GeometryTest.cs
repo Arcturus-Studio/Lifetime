@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 
 [TestClass]
-public class GeometryTest {
+public class MathUtilitiesTest {
     private static readonly double Eps = 0.0001;
     private static readonly Point P00 = new Point(0, 0);
     private static readonly Point P01 = new Point(0, 1);

@@ -43,9 +43,9 @@ namespace LifetimeExample2 {
             public Ball Child;
         }
         private Color HueColor(double hue) {
-            var r = (byte)Math.Floor((hue.DifMod(0, 3).Abs() - 0.5)*256).Between(0, 255);
-            var g = (byte)Math.Floor((hue.DifMod(1, 3).Abs() - 0.5) * 256).Between(0, 255);
-            var b = (byte)Math.Floor((hue.DifMod(2, 3).Abs() - 0.5) * 256).Between(0, 255);
+            var r = (byte)Math.Floor((hue.SignedModularDifference(0, 3).Abs() - 0.5)*256).Clamp(0, 255);
+            var g = (byte)Math.Floor((hue.SignedModularDifference(1, 3).Abs() - 0.5) * 256).Clamp(0, 255);
+            var b = (byte)Math.Floor((hue.SignedModularDifference(2, 3).Abs() - 0.5) * 256).Clamp(0, 255);
             return Color.FromRgb(r, g, b);
         }
         private async void GameLoop(Lifetime gameLifetime) {
@@ -119,8 +119,8 @@ namespace LifetimeExample2 {
                         ball.Pos += ball.Vel * t;
 
                         // naive bounce back after going off the side
-                        var vx = ball.Vel.X.MatchSign(-ball.Pos.X.RangeSign(0, grid.ActualWidth - ball.Radius));
-                        var vy = ball.Vel.Y.MatchSign(-ball.Pos.Y.RangeSign(0, grid.ActualHeight - ball.Radius));
+                        var vx = ball.Vel.X.RangeBounceVelocity(ball.Pos.X, 0, grid.ActualWidth - ball.Radius);
+                        var vy = ball.Vel.Y.RangeBounceVelocity(ball.Pos.Y, 0, grid.Height - ball.Radius);
                         ball.Vel = new Vector(vx, vy);
                     },
                     life);
