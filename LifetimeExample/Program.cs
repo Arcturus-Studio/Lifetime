@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using Strilanc.Util;
-using System.Reactive.Linq;
 
 public static class Program {
     private static void WriteLine(this string text, params object[] arg) {
@@ -14,32 +12,6 @@ public static class Program {
     }
 
     public static void Main() {
-        var sourceCollection = new PerishableCollection<int>();
-        var uniqueId = 0;
-        var transformedCollection = sourceCollection
-            // treat collection as an observable sequence of perishable items, so we can easily transform it
-            .AsObservable()
-            // pair each item with a unique id
-            // using perishables means we don't care that the projection can't be repeated!
-            .Select((int e) => Tuple.Create(e, Interlocked.Increment(ref uniqueId)))
-            // ignore the first two items in the collection (either already in it or added to it) when we observe it
-            .Skip(2)
-            // ignore items whose value matches their unique id
-            .Where(e => e.Item1 != e.Item2)
-            // accumulate items into a new perishable collection (never stops observing the source collection)
-            .ToPerishableCollection(Lifetime.Immortal);
-
-        var lifeSources = Enumerable.Range(0, 20).Select(e => new LifetimeSource()).ToArray();
-        var lifes = lifeSources.Select(e => e.Lifetime).ToArray();
-        sourceCollection.Add(13, lifes[0]); // -> (13, 1) -> skipped
-        sourceCollection.Add(5, lifes[1]); // -> (5, 2) -> skipped
-        sourceCollection.Add(7, lifes[2]); // -> (7, 3) -> kept -> pass -> added
-        sourceCollection.Add(4, lifes[3]); // -> (4, 4) -> kept -> fail
-        sourceCollection.Add(7, lifes[4]); // -> (7, 5) -> kept -> pass -> added
-
-        lifeSources[0].EndLifetime(); // removes 13 from the collection, no effect on transformed collection
-        lifeSources[2].EndLifetime(); // removes the first 7 from the collection, and (7, 3) from the transformed collection
-
         "=== Hit 'Enter' to advance ===".WriteLine();
         Break();
 
