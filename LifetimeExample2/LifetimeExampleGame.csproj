@@ -77,7 +77,7 @@
     <Compile Include="Collections\PerishableUtilities.cs" />
     <Compile Include="GameMechanics\GameMechanicUtilities.cs" />
     <Compile Include="GameMechanics\GameDrawAsControlsUtilities.cs" />
-    <Compile Include="GameMechanics\GameAnimationUtilities.cs" />
+    <Compile Include="GameMechanics\GameUtilities.cs" />
     <Compile Include="GameMechanics\Game.cs" />
     <Compile Include="GameMechanics\GameStep.cs" />
     <Compile Include="Mathematics\ConvexPolygon.cs" />

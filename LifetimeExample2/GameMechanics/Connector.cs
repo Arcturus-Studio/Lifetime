@@ -1,7 +1,7 @@
 ﻿using System.Windows;
-using LifetimeExample.Mathematics;
+using SnipSnap.Mathematics;
 
-namespace LifetimeExample2 {
+namespace SnipSnap {
     public class Connector {
         public Ball Parent;
         public Ball Child;

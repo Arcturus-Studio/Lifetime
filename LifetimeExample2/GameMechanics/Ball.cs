@@ -2,7 +2,7 @@
 using System.Windows;
 using TwistedOak.Util;
 
-namespace LifetimeExample2 {
+namespace SnipSnap {
     public class Ball {
         public Point LastPos;
         public Point Pos;

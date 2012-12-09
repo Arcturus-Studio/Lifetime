@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Windows;
 
-namespace LifetimeExample.Mathematics {
+namespace SnipSnap.Mathematics {
     ///<summary>Contains utility methods for working with geometric types (points, vectors, line segments and convex polygons).</summary>
     ///<remarks>Attempts to be simple and correct.</remarks>
     public static class GeometryUtilities {

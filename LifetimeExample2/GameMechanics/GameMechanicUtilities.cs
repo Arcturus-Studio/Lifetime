@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
-using LifetimeExample.Mathematics;
+using SnipSnap.Mathematics;
 using TwistedOak.Util;
 
-namespace LifetimeExample2 {
+namespace SnipSnap {
     public static class GameMechanicUtilities {
+        ///<summary>Adds a ball to the game, based on a parent ball (does not handle connecting the child ball to the parent ball).</summary>
         public static Ball SpawnBall(this Game game, Ball parent) {
             // generate an angle that's not too aligned with either the X or Y axies
             var omit = 0.1;
@@ -32,16 +34,20 @@ namespace LifetimeExample2 {
             game.Balls.Add(ball, ball.Life.Lifetime);
             return ball;
         }
+
+        ///<summary>Calls a callback at a somewhat random somewhat regular rate with respect to game time.</summary>
         public static void StochasticRate(this Game game, double expectedPerSecond, Lifetime lifetime, Action callback) {
             game.LoopActions.Add(
-                iter => {
+                step => {
                     // this is just a rough approximation, not exact at all
-                    var rate = expectedPerSecond*iter.TimeStep.TotalSeconds;
+                    var rate = expectedPerSecond*step.TimeStep.TotalSeconds;
                     var chance = rate;
                     if (game.Rng.NextDouble() < chance) callback();
                 },
                 lifetime);
         }
+
+        ///<summary>Handles periodically adding children to existing balls.</summary>
         public static void SetupPeriodicChildSpawning(this Game game, double expectedPerBallPerSecond, int maxChildrenPerBall, int maxGeneration) {
             game.Balls.AsObservable().Subscribe(
                 ball => {
@@ -68,15 +74,29 @@ namespace LifetimeExample2 {
                 },
                 game.Life);
         }
+
+        ///<summary>Handles making linked balls gently accelerate towards each other.</summary>
+        public static void SetupAttractBalls(this Game game, double deadRadius, double accellerationPerSecondChild, double accellerationPerSecondParent) {
+            game.LoopActions.Add(
+                step => {
+                    foreach (var e in game.Connectors.CurrentItems().Select(e => e.Value).Where(e => e.Line.Delta.Length > deadRadius)) {
+                        e.Child.Vel -= accellerationPerSecondChild * step.TimeStep.TotalSeconds * e.Line.Delta.Normal();
+                        e.Parent.Vel += accellerationPerSecondParent * step.TimeStep.TotalSeconds * e.Line.Delta.Normal();
+                    }
+                },
+                game.Life);
+        }
+
+        ///<summary>Handles moving balls at their current velocity and mirroring that velocity when past a boundary.</summary>
         public static void SetupMoveAndBounceBalls(this Game game, Func<Rect> playArea) {
             game.LoopActions.Add(
-                iter => {
+                step => {
                     foreach (var e in game.Balls.CurrentItems()) {
                         var ball = e.Value;
 
                         // move
                         ball.LastPos = ball.Pos;
-                        ball.Pos += ball.Vel*iter.TimeStep.TotalSeconds;
+                        ball.Pos += ball.Vel*step.TimeStep.TotalSeconds;
 
                         // naive bounce back after going off the side
                         var r = playArea();
@@ -87,13 +107,15 @@ namespace LifetimeExample2 {
                 },
                 game.Life);
         }
+
+        ///<summary>Handles cutting connectors with a moving kill point.</summary>
         public static void SetupMouseCutter(this Game game,
                                             PerishableCollection<UIElement> controls,
                                             Func<Point?> liveMousePosition,
                                             double cutTolerance) {
             var lastUsedMousePos = liveMousePosition();
             game.LoopActions.Add(
-                iter => {
+                step => {
                     // get a path between last and current mouse positions, if any
                     var prev = lastUsedMousePos;
                     var cur = liveMousePosition();

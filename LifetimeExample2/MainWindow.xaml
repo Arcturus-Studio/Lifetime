@@ -1,4 +1,4 @@
-﻿<Window x:Class="LifetimeExample2.MainWindow"
+﻿<Window x:Class="SnipSnap.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Lifetime Example - SnipSnap" Height="350" Width="525">

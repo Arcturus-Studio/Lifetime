@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using TwistedOak.Util;
 
-namespace LifetimeExample.Mathematics {
+namespace SnipSnap.Mathematics {
     ///<summary>Utility methods for working with numbers and related concepts.</summary>
     public static class MathUtilities {
         ///<summary>The sign (+1, -1, or 0) of a number.</summary>

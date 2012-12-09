@@ -4,10 +4,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using LifetimeExample.Mathematics;
+using SnipSnap.Mathematics;
 using TwistedOak.Util;
 
-namespace LifetimeExample2 {
+namespace SnipSnap {
     public partial class MainWindow {
         public MainWindow() {
             InitializeComponent();
@@ -39,6 +39,12 @@ namespace LifetimeExample2 {
             // balls should move and bounce off borders
             game.SetupMoveAndBounceBalls(
                 playArea: () => new Rect(0, 0, canvas.ActualWidth, canvas.ActualHeight));
+
+            // connected balls should be be gently tugged towards each other
+            game.SetupAttractBalls(
+                deadRadius: 50,
+                accellerationPerSecondChild: 10,
+                accellerationPerSecondParent: 5);
 
             // balls should periodically spawn dependent children
             game.SetupPeriodicChildSpawning(
@@ -83,7 +89,9 @@ namespace LifetimeExample2 {
             }
 
             // run the game loop until the game is over
-            game.Loop();
+            game.Loop().ContinueWith(e => {
+                // exceptions?
+            });
         }
 
         private void SetupMouseCutter(Game game, PerishableCollection<UIElement> controls) {
@@ -94,6 +102,7 @@ namespace LifetimeExample2 {
                 Width = 10,
                 Height = 10,
                 Fill = new SolidColorBrush(Colors.Black),
+                IsHitTestVisible = false,
                 RenderTransform = new TransformGroup {
                     Children = new TransformCollection {
                         rotater,
@@ -150,8 +159,8 @@ namespace LifetimeExample2 {
                 SnipsLabel.Text = String.Format("Snips: {0}", snips);
             }), game.Life);
             
-            game.LoopActions.Add(iter => {
-                elapsed += iter.TimeStep;
+            game.LoopActions.Add(step => {
+                elapsed += step.TimeStep;
                 TimeLabel.Text = String.Format("Time: {0:0.0}s", elapsed.TotalSeconds);
             }, game.Life);
         }

@@ -2,24 +2,28 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using LifetimeExample.Mathematics;
+using SnipSnap.Mathematics;
 using TwistedOak.Util;
-using LineSegment = LifetimeExample.Mathematics.LineSegment;
+using LineSegment = SnipSnap.Mathematics.LineSegment;
 
-namespace LifetimeExample2 {
+namespace SnipSnap {
+    ///<summary>Utility methods for naively showing game state via WPF.</summary>
     public static class GameDrawAsControlsUtilities {
+        ///<summary>Positions a line control to match a line segment.</summary>
         public static void Reposition(this Line lineControl, LineSegment position) {
             lineControl.X1 = position.Start.X;
             lineControl.Y1 = position.Start.Y;
             lineControl.X2 = position.End.X;
             lineControl.Y2 = position.End.Y;
         }
-        
+
+        ///<summary>Positions an ellipse control to match a center and radius.</summary>
         public static void Reposition(this Ellipse ellipseControl, Point center, double radius) {
             ellipseControl.Width = ellipseControl.Height = radius * 2;
             ellipseControl.RenderTransform = new TranslateTransform(center.X - radius, center.Y - radius);
         }
 
+        ///<summary>Causes a rotating rectangle that grows and fades in then shrinks and fades out to be shown.</summary>
         public static Lifetime AnimateSpinningRectangleExplosion(this Game game,
                                                                  PerishableCollection<UIElement> controls,
                                                                  Func<double, Point> position,
@@ -32,23 +36,24 @@ namespace LifetimeExample2 {
             };
             var life = game.AnimateWith(
                 duration,
-                (ix, prop, ellapsed) => {
-                    var m = (prop - 0.5).Abs()*2;
-                    var r = 0.LerpTo(finalRadius, 1 - m);
-                    var pt = position(prop);
-                    rect.Width = rect.Height = r*2;
+                (step, portion, ellapsed) => {
+                    var nearHalfPortion = (portion - 0.5).Abs()*2;
+                    var radius = 0.LerpTo(finalRadius, 1 - nearHalfPortion);
+                    var pos = position(portion);
+                    rect.Width = rect.Height = radius*2;
                     rect.RenderTransform = new TransformGroup {
                         Children = new TransformCollection {
                             new RotateTransform(rotationsPerSecond*ellapsed.TotalSeconds*360),
-                            new TranslateTransform(pt.X - r, pt.Y - r)
+                            new TranslateTransform(pos.X - radius, pos.Y - radius)
                         }
                     };
-                    rect.Fill = new SolidColorBrush(color.LerpToTransparent(m));
+                    rect.Fill = new SolidColorBrush(color.LerpToTransparent(nearHalfPortion));
                 });
             controls.Add(rect, life);
             return life;
         }
 
+        ///<summary>Handles making line controls for each connector in the game, as while as showing their death animations.</summary>
         public static void SetupDrawConnectorsAsControls(this Game game,
                                                          PerishableCollection<UIElement> controls,
                                                          TimeSpan deathFadeDuration,
@@ -73,7 +78,7 @@ namespace LifetimeExample2 {
 
                     // reposition line control during each game loop, until the connector is dead
                     game.LoopActions.Add(
-                        iter => lineControl.Reposition(con.Line),
+                        step => lineControl.Reposition(con.Line),
                         e.Lifetime);
 
                     // show a bang if the connector is cut
@@ -100,9 +105,9 @@ namespace LifetimeExample2 {
                     // expand and fade out the line control after the connector dies
                     var controlLife = e.Lifetime.WhenAfterLife(() => game.AnimateWith(
                         deathFadeDuration,
-                        (iter, prop, dt) => {
-                            lineControl.StrokeThickness = thickness * 1.LerpTo(deathFinalThicknessFactor, prop);
-                            lineControl.Stroke = new SolidColorBrush(Colors.Black.LerpToTransparent(prop));
+                        (step, portion, dt) => {
+                            lineControl.StrokeThickness = thickness * 1.LerpTo(deathFinalThicknessFactor, portion);
+                            lineControl.Stroke = new SolidColorBrush(Colors.Black.LerpToTransparent(portion));
                             lineControl.Reposition(e.Value.Line);
                         }));
 
@@ -110,6 +115,8 @@ namespace LifetimeExample2 {
                 },
                 game.Life);
         }
+
+        ///<summary>Handles making ellipse controls for each ball in the game, as while as showing their death animations.</summary>
         public static void SetupDrawBallsAsControls(this Game game, PerishableCollection<UIElement> controls, TimeSpan deathFadeOutDuration, double deathFinalRadiusFactor) {
             game.Balls.AsObservable().Subscribe(
                 e => {
@@ -124,6 +131,7 @@ namespace LifetimeExample2 {
                         Fill = new SolidColorBrush(color)
                     };
 
+                    // 'root' balls have a black border
                     if (ball.Generation == 1) {
                         ellipseControl.StrokeThickness = 3;
                         ellipseControl.Stroke = new SolidColorBrush(Colors.Black);
@@ -131,18 +139,18 @@ namespace LifetimeExample2 {
 
                     // reposition ellipse control during each game loop, until ball is dead
                     game.LoopActions.Add(
-                        iter => ellipseControl.Reposition(ball.Pos, ball.Radius),
+                        step => ellipseControl.Reposition(ball.Pos, ball.Radius),
                         e.Lifetime);
 
                     // once ball is dead, expand and fade out the ellipse
                     var controlLifetime = e.Lifetime.WhenAfterLife(() =>
                         game.AnimateWith(
                             deathFadeOutDuration,
-                            (iter, prop, dt) => {
+                            (step, portion, dt) => {
                                 // fade out
-                                ellipseControl.Fill = new SolidColorBrush(color.LerpToTransparent(prop));
+                                ellipseControl.Fill = new SolidColorBrush(color.LerpToTransparent(portion));
                                 // expand
-                                var radius = ball.Radius * 1.LerpTo(deathFinalRadiusFactor, prop);
+                                var radius = ball.Radius * 1.LerpTo(deathFinalRadiusFactor, portion);
                                 ellipseControl.Reposition(ball.Pos, radius);
                             }));
 

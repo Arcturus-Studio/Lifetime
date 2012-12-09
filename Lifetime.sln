@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleSimple", "Li
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleGame", "LifetimeExample2\LifetimeExampleGame.csproj", "{669BABBC-C9D1-4726-8F0C-1F979C15F5CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleGamTest", "ExampleTest\LifetimeExampleGamTest.csproj", "{B3E0CBA9-00D1-4372-BDFE-A6D81531BEB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleGameTest", "ExampleTest\LifetimeExampleGameTest.csproj", "{B3E0CBA9-00D1-4372-BDFE-A6D81531BEB0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

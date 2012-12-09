@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Windows;
 
-namespace LifetimeExample.Mathematics {
+namespace SnipSnap.Mathematics {
     [DebuggerDisplay("{ToString()}")]
     public struct LineSegment {
         public readonly Point Start;

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LifetimeExample2.Properties {
+namespace SnipSnap.portionerties {
 
 
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

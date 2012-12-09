@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LifetimeExample2 {
+namespace SnipSnap {
     public class GameStep {
         public readonly TimeSpan TimeStep;
         public GameStep(TimeSpan timeStep) {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 
-namespace LifetimeExample.Mathematics {
+namespace SnipSnap.Mathematics {
     [DebuggerDisplay("{ToString()}")]
     public struct ConvexPolygon {
         public readonly IReadOnlyList<Point> Corners;

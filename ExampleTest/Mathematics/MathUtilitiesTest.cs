@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Windows;
-using LifetimeExample.Mathematics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Linq;
+using SnipSnap.Mathematics;
 
 [TestClass]
 public class GeometryTest {
