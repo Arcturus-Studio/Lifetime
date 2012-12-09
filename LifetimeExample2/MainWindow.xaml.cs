@@ -9,6 +9,8 @@ using Strilanc.Util;
 
 namespace SnipSnap {
     public partial class MainWindow {
+        public TimeSpan Best = TimeSpan.Zero;
+
         public MainWindow() {
             InitializeComponent();
             
@@ -76,7 +78,7 @@ namespace SnipSnap {
             SetupMouseCutter(game, controls);
 
             // text displays of game state should track that state
-            SetupDisplayLabels(game);
+            SetupEnergyAndTime(game);
 
             // there should be a few root balls to start with
             foreach (var repeat in 5.Range()) {
@@ -109,6 +111,7 @@ namespace SnipSnap {
                         translater
                     }
                 },
+                Visibility = Visibility.Collapsed,
                 RenderTransformOrigin = new Point(0.5, 0.5)
             };
             controls.Add(mouseTarget, game.Life);
@@ -141,27 +144,79 @@ namespace SnipSnap {
                 () => liveMousePos,
                 cutTolerance: 5);
         }
-        private void SetupDisplayLabels(Game game) {
+        private void SetupEnergyAndTime(Game game) {
             var snips = 0;
             var snaps = 0;
             var elapsed = TimeSpan.Zero;
-            
-            TimeLabel.Text = String.Format("Time: {0:0.0}s", elapsed.TotalSeconds);
+
+            // show energy status
+            var done = false;
+            var gains = 0.0;
+            var loses = 0.0;
+            var energy = 50.0;
+            var maxEnergy = 50.0;
+            game.LoopActions.Add(step => {
+                // energy decays faster and faster over time
+                var t = step.TimeStep.TotalSeconds;
+                energy -= t * Math.Log(elapsed.TotalSeconds / 15 + 1).Max(1);
+
+                // quickly decrease the size of the red/blue bars that show changes
+                gains -= t * 5;
+                loses -= t * 5;
+                gains *= Math.Pow(0.01, t);
+                loses *= Math.Pow(0.01, t);
+                
+                // keep everything reasonable
+                gains = gains.Clamp(0, 10);
+                loses = loses.Clamp(0, 10);
+                energy = energy.Clamp(0, maxEnergy);
+
+                // "draw" energy
+                var w = canvas.ActualWidth;
+                BarEnergy.Fill = new SolidColorBrush(Colors.Yellow.LerpTo(Colors.Green, (energy * 2 / maxEnergy).Clamp(0, 1)));
+                BarLoses.Width = ((energy + loses) / maxEnergy * w).Clamp(0, w);
+                BarGains.Width = (energy / maxEnergy * w).Clamp(0, w);
+                BarEnergy.Width = ((energy - gains) / maxEnergy * w).Clamp(0, w);
+
+                // hit 0 energy? game over
+                done |= energy == 0;
+            }, game.Life);
+
+            // track energy changes due to connectors dying
             SnapsLabel.Text = String.Format("Snaps: {0}", snaps);
             SnipsLabel.Text = String.Format("Snips: {0}", snips);
-            
             game.Connectors.AsObservable().Subscribe(e => e.Lifetime.WhenDead(() => {
-                if (e.Value.CutPoint != null) 
+                if (e.Value.CutPoint != null) {
+                    // making cuts costs energy
                     snips += 1;
-                else
+                    energy -= 3;
+                    loses += 4;
+                    gains += 1;
+                } else {
+                    // propagating cuts gain you some energy
                     snaps += 1;
+                    if (!done) energy += 1;
+                    gains += 1;
+                }
+
+                // show new total quantities
                 SnapsLabel.Text = String.Format("Snaps: {0}", snaps);
                 SnipsLabel.Text = String.Format("Snips: {0}", snips);
             }), game.Life);
             
+            // track times
             game.LoopActions.Add(step => {
-                elapsed += step.TimeStep;
+                // advance time
+                if (!done) elapsed += step.TimeStep;
+                Best = Best.Max(elapsed);
+                
+                // show time (red when dead)
+                TimeLabel.Background = new SolidColorBrush(done ? Colors.Pink : Colors.White);
                 TimeLabel.Text = String.Format("Time: {0:0.0}s", elapsed.TotalSeconds);
+
+                // show best time (green when making best time)
+                TimeBest.Background = new SolidColorBrush(Best == elapsed ? Colors.LightGreen : Colors.White);
+                TimeBest.Text = String.Format("Best: {0:0.0}s", Best.TotalSeconds);
             }, game.Life);
         }
     }

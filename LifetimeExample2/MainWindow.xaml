@@ -5,6 +5,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
+            <RowDefinition Height="10"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0" Background="Gray">
@@ -12,7 +13,12 @@
             <TextBox x:Name="SnipsLabel" Text="Snips: 0" Width="100"/>
             <TextBox x:Name="SnapsLabel" Text="Snaps: 0" Width="100"/>
             <TextBox x:Name="TimeLabel" Text="Time: 0.0s" Width="100"/>
+            <TextBox x:Name="TimeBest" Text="Best: 0.0s" Width="100"/>
         </StackPanel>
-        <Canvas Grid.Row="1" x:Name="canvas" Background="White"/>
+        <Rectangle Fill="LightGray" Grid.Row="1"/>
+        <Rectangle x:Name="BarLoses" Fill="Red" HorizontalAlignment="Left" Grid.Row="1"/>
+        <Rectangle x:Name="BarGains" Fill="Blue" HorizontalAlignment="Left" Grid.Row="1"/>
+        <Rectangle x:Name="BarEnergy" Fill="Green" HorizontalAlignment="Left" Grid.Row="1"/>
+        <Canvas Grid.Row="2" x:Name="canvas" Background="White"/>
     </Grid>
 </Window>
