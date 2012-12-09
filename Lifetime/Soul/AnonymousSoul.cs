@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace TwistedOak.Util.Soul {
+namespace Strilanc.Util.Soul {
     ///<summary>A soul implemented by delegates passed to its constructor.</summary>
     [DebuggerStepThrough]
     internal sealed class AnonymousSoul : ISoul {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TwistedOak.Util.Soul {
+namespace Strilanc.Util.Soul {
     ///<summary>A permanently immortal soul.</summary>
     internal sealed class ImmortalSoul : ISoul {
         ///<summary>The single instance of the permanently dead soul.</summary>

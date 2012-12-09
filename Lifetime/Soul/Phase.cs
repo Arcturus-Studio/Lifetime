@@ -1,4 +1,4 @@
-﻿namespace TwistedOak.Util.Soul {
+﻿namespace Strilanc.Util.Soul {
     ///<summary>A state of life.</summary>
     internal enum Phase {
         ///<summary>The transient living state preceeding either death or immortality.</summary>

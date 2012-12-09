@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TwistedOak.Util;
+using Strilanc.Util;
 
 [TestClass]
 public class LifetimeAndSourceTest {

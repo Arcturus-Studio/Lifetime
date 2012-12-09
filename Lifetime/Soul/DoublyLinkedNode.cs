@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TwistedOak.Util.Soul {
+namespace Strilanc.Util.Soul {
     ///<summary>A doubly-linked list node for a circular linked list.</summary>
     internal sealed class DoublyLinkedNode<T> {
         private DoublyLinkedNode<T> _next;

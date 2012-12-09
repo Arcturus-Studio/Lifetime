@@ -1,5 +1,5 @@
 ﻿using System;
-using TwistedOak.Util;
+using Strilanc.Util;
 
 namespace SnipSnap {
     public class Game {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using TwistedOak.Util.Soul;
+using Strilanc.Util.Soul;
 
-namespace TwistedOak.Util {
+namespace Strilanc.Util {
     /// <summary>
     /// Runs callbacks when transitioning permanently from mortal to either dead or immortal.
     /// The default lifetime is immortal.

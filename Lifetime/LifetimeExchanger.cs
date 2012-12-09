@@ -1,6 +1,6 @@
 using System.Threading;
 
-namespace TwistedOak.Util {
+namespace Strilanc.Util {
     ///<summary>Creates lifetimes when requested, setting them when the next lifetime is requested.</summary>
     public sealed class LifetimeExchanger {
         private LifetimeSource _active = new LifetimeSource();

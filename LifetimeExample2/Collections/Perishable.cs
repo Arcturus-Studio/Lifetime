@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace TwistedOak.Util {
+namespace Strilanc.Util {
     ///<summary>An item augmented with a lifetime.</summary>
     [DebuggerDisplay("{ToString()}")]
     public struct Perishable<T> {

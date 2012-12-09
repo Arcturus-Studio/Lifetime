@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Windows;
 using SnipSnap.Mathematics;
-using TwistedOak.Util;
+using Strilanc.Util;
 
 namespace SnipSnap {
     public static class GameMechanicUtilities {

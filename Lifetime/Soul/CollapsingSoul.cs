@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TwistedOak.Util.Soul {
+namespace Strilanc.Util.Soul {
     ///<summary>Delegates to an underlying soul that is replaced with one of the permanent souls once it is no longer mortal.</summary>
     internal sealed class CollapsingSoul : ISoul {
         private bool _collapsed;

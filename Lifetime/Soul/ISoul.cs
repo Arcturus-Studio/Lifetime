@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TwistedOak.Util.Soul {
+namespace Strilanc.Util.Soul {
     internal delegate void RegistrationRemover();
 
     ///<summary>The internal representation of a lifetime.</summary>

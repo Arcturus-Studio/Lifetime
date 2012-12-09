@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace TwistedOak.Util.Soul {
+namespace Strilanc.Util.Soul {
     ///<summary>An initially mortal soul that can be manually killed or immortalized.</summary>
     internal sealed class MortalSoul : ISoul {
         ///<summary>Callbacks to run when the lifetime is killed or immortalized.</summary>

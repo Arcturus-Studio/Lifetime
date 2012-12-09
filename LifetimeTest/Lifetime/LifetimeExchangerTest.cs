@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TwistedOak.Util;
+using Strilanc.Util;
 
 [TestClass]
 public class LifetimeExchangerTest {

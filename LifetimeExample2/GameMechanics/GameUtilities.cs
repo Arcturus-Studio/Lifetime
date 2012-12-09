@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using SnipSnap.Mathematics;
-using TwistedOak.Util;
+using Strilanc.Util;
 
 namespace SnipSnap {
     ///<summary>Generic utility methods for working with the game.</summary>

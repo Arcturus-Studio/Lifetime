@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using TwistedOak.Util.Soul;
+using Strilanc.Util.Soul;
 
-namespace TwistedOak.Util {
+namespace Strilanc.Util {
     /// <summary>
     /// Controls the fate of an exposed lifetime.
     /// The exposed lifetime dies or becomes immortal when the EndLifetime or ImmortalizeLifetime methods are called, respectively.

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using TwistedOak.Util;
+using Strilanc.Util;
 
 internal static class LifetimeTestUtil {
     public static Task WhenDeadTask(this Lifetime lifetime, Lifetime r = default(Lifetime)) {

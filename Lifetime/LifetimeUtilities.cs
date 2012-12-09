@@ -1,6 +1,6 @@
-using TwistedOak.Util.Soul;
+using Strilanc.Util.Soul;
 
-namespace TwistedOak.Util {
+namespace Strilanc.Util {
     ///<summary>Utility classes for manipulating lifetimes.</summary>
     public static class LifetimeUtilities {
         ///<summary>Returns a lifetime that dies when either of the given lifetimes dies or becomes immortal when both of the given lifetimes become immortal.</summary>

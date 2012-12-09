@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace TwistedOak.Util.Soul {
+namespace Strilanc.Util.Soul {
     ///<summary>Utility methods for working with souls</summary>
     internal static class Soul {
         public static readonly RegistrationRemover EmptyRemover = () => { };
