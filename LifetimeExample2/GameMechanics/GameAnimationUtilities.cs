@@ -8,20 +8,20 @@ namespace LifetimeExample2 {
             var life = game.Life.CreateDependentSource();
             game.LoopActions.Add(
                 iter => {
-                    remaining -= iter.dt;
+                    remaining -= iter.TimeStep;
                     if (remaining < TimeSpan.Zero) life.EndLifetime();
                 },
                 life.Lifetime);
             return life.Lifetime;
         }
 
-        public delegate void AnimationCallback(Iter iter, double proportionCompleted, TimeSpan elapsed);
+        public delegate void AnimationCallback(GameStep gameStep, double proportionCompleted, TimeSpan elapsed);
         public static Lifetime AnimateWith(this Game game, TimeSpan duration, AnimationCallback callback, Lifetime? constraint = default(Lifetime?)) {
             var remaining = duration;
             var life = (constraint ?? game.Life).CreateDependentSource();
             game.LoopActions.Add(
                 iter => {
-                    remaining -= iter.dt;
+                    remaining -= iter.TimeStep;
                     if (remaining >= TimeSpan.Zero) {
                         callback(iter, 1 - remaining.TotalSeconds / duration.TotalSeconds, remaining);
                     } else {

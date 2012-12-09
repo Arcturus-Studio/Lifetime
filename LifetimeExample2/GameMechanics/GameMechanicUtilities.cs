@@ -36,7 +36,7 @@ namespace LifetimeExample2 {
             game.LoopActions.Add(
                 iter => {
                     // this is just a rough approximation, not exact at all
-                    var rate = expectedPerSecond*iter.dt.TotalSeconds;
+                    var rate = expectedPerSecond*iter.TimeStep.TotalSeconds;
                     var chance = rate;
                     if (game.Rng.NextDouble() < chance) callback();
                 },
@@ -62,7 +62,7 @@ namespace LifetimeExample2 {
                         () => {
                             if (curChildCount >= maxChildrenPerBall) return;
                             var child = game.SpawnBall(parent: ball.Value);
-                            game.Connectors.Add(new BallLine {Child = child, Parent = ball.Value}, child.Life.Lifetime);
+                            game.Connectors.Add(new Connector {Child = child, Parent = ball.Value}, child.Life.Lifetime);
                             children.Add(child, child.Life.Lifetime);
                         });
                 },
@@ -76,7 +76,7 @@ namespace LifetimeExample2 {
 
                         // move
                         ball.LastPos = ball.Pos;
-                        ball.Pos += ball.Vel*iter.dt.TotalSeconds;
+                        ball.Pos += ball.Vel*iter.TimeStep.TotalSeconds;
 
                         // naive bounce back after going off the side
                         var r = playArea();

@@ -12,6 +12,7 @@ namespace LifetimeExample2 {
         public MainWindow() {
             InitializeComponent();
             
+            // setup start/stop button
             Game curGame = null;
             ButtonStartStop.Click += (sender, arg) => {
                 if (curGame == null) {
@@ -26,6 +27,7 @@ namespace LifetimeExample2 {
             };
         }
         private void SetupAndRunGame(Game game) {
+            // controls added to this collection should be displayed on the canvas until they perish
             var controls = new PerishableCollection<UIElement>();
             controls.AsObservable().Subscribe(
                 e => {
@@ -34,20 +36,23 @@ namespace LifetimeExample2 {
                 },
                 game.Life);
 
-            SetupDisplayLabels(game);
+            // balls should move and bounce off borders
+            game.SetupMoveAndBounceBalls(
+                playArea: () => new Rect(0, 0, canvas.ActualWidth, canvas.ActualHeight));
 
-            game.SetupMoveAndBounceBalls(() => new Rect(0, 0, canvas.ActualWidth, canvas.ActualHeight));
-
+            // balls should periodically spawn dependent children
             game.SetupPeriodicChildSpawning(
                 expectedPerBallPerSecond: 0.2, 
                 maxChildrenPerBall: 2, 
                 maxGeneration: 5);
 
+            // balls should be drawn using ellipse controls and have death animations
             game.SetupDrawBallsAsControls(
                 controls, 
                 deathFadeOutDuration: 800.Milliseconds(), 
                 deathFinalRadiusFactor: 3);
 
+            // ball connectors should be drawn using line controls and have cut and death animations
             game.SetupDrawConnectorsAsControls(
                 controls,
                 deathFadeDuration: 800.Milliseconds(),
@@ -61,9 +66,13 @@ namespace LifetimeExample2 {
                 cutBangRotationsPerSecond: 2,
                 cutBangMaxRadius: 15);
 
+            // connectors that touch the cursor should die
             SetupMouseCutter(game, controls);
 
-            // spawn some root balls
+            // text displays of game state should track that state
+            SetupDisplayLabels(game);
+
+            // there should be a few root balls to start with
             foreach (var repeat in 5.Range()) {
                 game.SpawnBall(parent: new Ball {
                     Pos = new Point(game.Rng.NextDouble()*canvas.ActualWidth, game.Rng.NextDouble()*canvas.ActualHeight),
@@ -73,8 +82,10 @@ namespace LifetimeExample2 {
                 });
             }
 
+            // run the game loop until the game is over
             game.Loop();
         }
+
         private void SetupMouseCutter(Game game, PerishableCollection<UIElement> controls) {
             // create rectangle to center under mouse
             var rotater = new RotateTransform();
@@ -140,7 +151,7 @@ namespace LifetimeExample2 {
             }), game.Life);
             
             game.LoopActions.Add(iter => {
-                elapsed += iter.dt;
+                elapsed += iter.TimeStep;
                 TimeLabel.Text = String.Format("Time: {0:0.0}s", elapsed.TotalSeconds);
             }, game.Life);
         }

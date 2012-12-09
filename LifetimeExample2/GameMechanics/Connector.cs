@@ -2,7 +2,7 @@
 using LifetimeExample.Mathematics;
 
 namespace LifetimeExample2 {
-    public class BallLine {
+    public class Connector {
         public Ball Parent;
         public Ball Child;
         public Point? CutPoint;
