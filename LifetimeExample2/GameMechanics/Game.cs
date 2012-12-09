@@ -18,7 +18,6 @@ namespace LifetimeExample2 {
             clock.Start();
             var lastTime = clock.Elapsed;
             while (true) {
-                await Task.Delay(TimeSpan.FromMilliseconds(10));
                 if (this.Life.IsDead) break;
                 var dt = clock.Elapsed - lastTime;
                 lastTime += dt;
@@ -26,6 +25,8 @@ namespace LifetimeExample2 {
 
                 foreach (var e in this.LoopActions.CurrentItems())
                     e.Value.Invoke(new Iter { dt = smoothedDt });
+                
+                await Task.Delay(TimeSpan.FromMilliseconds(10));
             }
         }
    }

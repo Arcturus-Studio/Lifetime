@@ -1,19 +1,31 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 using LifetimeExample.Mathematics;
 using TwistedOak.Util;
-using System.Reactive.Linq;
 
 namespace LifetimeExample2 {
     public partial class MainWindow {
         public MainWindow() {
             InitializeComponent();
-            this.Loaded += (sender, arg) => {
-                RunGame(new Game());
+            
+            Game curGame = null;
+            ButtonStartStop.Click += (sender, arg) => {
+                if (curGame == null) {
+                    curGame = new Game();
+                    SetupAndRunGame(curGame);
+                    ButtonStartStop.Content = "End";
+                } else {
+                    curGame.LifeSource.EndLifetime();
+                    curGame = null;
+                    ButtonStartStop.Content = "Start";
+                }
             };
         }
-        private void RunGame(Game game) {
+        private void SetupAndRunGame(Game game) {
             var controls = new PerishableCollection<UIElement>();
             controls.AsObservable().Subscribe(
                 e => {
@@ -22,8 +34,10 @@ namespace LifetimeExample2 {
                 },
                 game.Life);
 
+            SetupDisplayLabels(game);
+
             game.SetupMoveAndBounceBalls(() => new Rect(0, 0, canvas.ActualWidth, canvas.ActualHeight));
-            
+
             game.SetupPeriodicChildSpawning(
                 expectedPerBallPerSecond: 0.2, 
                 maxChildrenPerBall: 2, 
@@ -47,15 +61,9 @@ namespace LifetimeExample2 {
                 cutBangRotationsPerSecond: 2,
                 cutBangMaxRadius: 15);
 
-            var liveMousePos = default(Point?);
-            this.MouseMove += (sender, arg) => liveMousePos = arg.GetPosition(canvas);
-            this.MouseLeave += (sender, arg) => liveMousePos = null;
-            game.SetupMouseCutter(
-                controls,
-                () => liveMousePos,
-                cutTolerance: 1);
+            SetupMouseCutter(game, controls);
 
-
+            // spawn some root balls
             foreach (var repeat in 5.Range()) {
                 game.SpawnBall(parent: new Ball {
                     Pos = new Point(game.Rng.NextDouble()*canvas.ActualWidth, game.Rng.NextDouble()*canvas.ActualHeight),
@@ -66,6 +74,75 @@ namespace LifetimeExample2 {
             }
 
             game.Loop();
+        }
+        private void SetupMouseCutter(Game game, PerishableCollection<UIElement> controls) {
+            // create rectangle to center under mouse
+            var rotater = new RotateTransform();
+            var translater = new TranslateTransform();
+            var mouseTarget = new Rectangle {
+                Width = 10,
+                Height = 10,
+                Fill = new SolidColorBrush(Colors.Black),
+                RenderTransform = new TransformGroup {
+                    Children = new TransformCollection {
+                        rotater,
+                        translater
+                    }
+                },
+                RenderTransformOrigin = new Point(0.5, 0.5)
+            };
+            controls.Add(mouseTarget, game.Life);
+            
+            // make the rectangle rotate
+            rotater.BeginAnimation(
+                RotateTransform.AngleProperty, 
+                new DoubleAnimation(0, 360, 1.Seconds()) { RepeatBehavior = RepeatBehavior.Forever });
+            
+            // watch mouse position over canvas, keeping the rotating rectangle centered on it
+            var liveMousePos = default(Point?);
+            MouseEventHandler h = (sender, arg) => {
+                mouseTarget.Visibility = Visibility.Visible;
+                liveMousePos = arg.GetPosition(canvas);
+                translater.X = liveMousePos.Value.X - mouseTarget.Width / 2;
+                translater.Y = liveMousePos.Value.Y - mouseTarget.Height / 2;
+            };
+            MouseEventHandler h2 = (sender, arg) => {
+                mouseTarget.Visibility = Visibility.Collapsed;
+                liveMousePos = null;
+            };
+            canvas.MouseMove += h;
+            canvas.MouseLeave += h2;
+            game.Life.WhenDead(() => canvas.MouseMove -= h);
+            game.Life.WhenDead(() => canvas.MouseLeave -= h2);
+            
+            // pass along mouse positions to the game
+            game.SetupMouseCutter(
+                controls,
+                () => liveMousePos,
+                cutTolerance: 5);
+        }
+        private void SetupDisplayLabels(Game game) {
+            var snips = 0;
+            var snaps = 0;
+            var elapsed = TimeSpan.Zero;
+            
+            TimeLabel.Text = String.Format("Time: {0:0.0}s", elapsed.TotalSeconds);
+            SnapsLabel.Text = String.Format("Snaps: {0}", snaps);
+            SnipsLabel.Text = String.Format("Snips: {0}", snips);
+            
+            game.Connectors.AsObservable().Subscribe(e => e.Lifetime.WhenDead(() => {
+                if (e.Value.CutPoint != null) 
+                    snips += 1;
+                else
+                    snaps += 1;
+                SnapsLabel.Text = String.Format("Snaps: {0}", snaps);
+                SnipsLabel.Text = String.Format("Snips: {0}", snips);
+            }), game.Life);
+            
+            game.LoopActions.Add(iter => {
+                elapsed += iter.dt;
+                TimeLabel.Text = String.Format("Time: {0:0.0}s", elapsed.TotalSeconds);
+            }, game.Life);
         }
     }
 }

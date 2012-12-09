@@ -80,8 +80,8 @@ namespace LifetimeExample2 {
 
                         // naive bounce back after going off the side
                         var r = playArea();
-                        var vx = ball.Vel.X.RangeBounceVelocity(ball.Pos.X, r.Left, (r.Right - ball.Radius*2).Max(0));
-                        var vy = ball.Vel.Y.RangeBounceVelocity(ball.Pos.Y, r.Top, (r.Bottom - ball.Radius*2).Max(0));
+                        var vx = ball.Vel.X.RangeBounceVelocity(ball.Pos.X, r.Left + ball.Radius, r.Left + ball.Radius + (r.Width - ball.Radius * 2).Max(0));
+                        var vy = ball.Vel.Y.RangeBounceVelocity(ball.Pos.Y, r.Top + ball.Radius, r.Top + ball.Radius + (r.Height - ball.Radius * 2).Max(0));
                         ball.Vel = new Vector(vx, vy);
                     }
                 },

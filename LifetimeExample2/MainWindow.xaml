@@ -1,8 +1,18 @@
 ﻿<Window x:Class="LifetimeExample2.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
-    <Canvas x:Name="canvas">
-        
-    </Canvas>
+        Title="Lifetime Example - SnipSnap" Height="350" Width="525">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Background="Gray">
+            <Button x:Name="ButtonStartStop" Content="Start" Width="100"/>
+            <TextBox x:Name="SnipsLabel" Text="Snips: 0" Width="100"/>
+            <TextBox x:Name="SnapsLabel" Text="Snaps: 0" Width="100"/>
+            <TextBox x:Name="TimeLabel" Text="Time: 0.0s" Width="100"/>
+        </StackPanel>
+        <Canvas Grid.Row="1" x:Name="canvas" Background="White"/>
+    </Grid>
 </Window>
