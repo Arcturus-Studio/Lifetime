@@ -10,8 +10,6 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0" Background="Gray">
             <Button x:Name="ButtonStartStop" Content="Start" Width="100"/>
-            <TextBox x:Name="SnipsLabel" Text="Snips: 0" Width="100"/>
-            <TextBox x:Name="SnapsLabel" Text="Snaps: 0" Width="100"/>
             <TextBox x:Name="TimeLabel" Text="Time: 0.0s" Width="100"/>
             <TextBox x:Name="TimeBest" Text="Best: 0.0s" Width="100"/>
         </StackPanel>

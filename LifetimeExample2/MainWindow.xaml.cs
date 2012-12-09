@@ -65,11 +65,11 @@ namespace SnipSnap {
                 controls,
                 deathFadeDuration: 800.Milliseconds(),
                 deathFinalThicknessFactor: 6,
-                propagateBangColor: Colors.Black,
+                propagateBangColor: Colors.Green,
                 propagateBangDuration: 400.Milliseconds(),
                 propagateBangRotationsPerSecond: 3,
-                propagateBangMaxRadius: 5,
-                cutBangColor: Colors.Black,
+                propagateBangMaxRadius: 10,
+                cutBangColor: Colors.Red,
                 cutBangDuration: 400.Milliseconds(),
                 cutBangRotationsPerSecond: 2,
                 cutBangMaxRadius: 15);
@@ -78,7 +78,10 @@ namespace SnipSnap {
             SetupMouseCutter(game, controls);
 
             // text displays of game state should track that state
-            SetupEnergyAndTime(game);
+            SetupEnergyAndTime(
+                game,
+                energyLossForCutting: 2.5,
+                energyGainPerConnectorBroken: 1);
 
             // there should be a few root balls to start with
             foreach (var repeat in 5.Range()) {
@@ -144,9 +147,7 @@ namespace SnipSnap {
                 () => liveMousePos,
                 cutTolerance: 5);
         }
-        private void SetupEnergyAndTime(Game game) {
-            var snips = 0;
-            var snaps = 0;
+        private void SetupEnergyAndTime(Game game, double energyLossForCutting, double energyGainPerConnectorBroken) {
             var elapsed = TimeSpan.Zero;
 
             // show energy status
@@ -183,25 +184,16 @@ namespace SnipSnap {
             }, game.Life);
 
             // track energy changes due to connectors dying
-            SnapsLabel.Text = String.Format("Snaps: {0}", snaps);
-            SnipsLabel.Text = String.Format("Snips: {0}", snips);
             game.Connectors.AsObservable().Subscribe(e => e.Lifetime.WhenDead(() => {
-                if (e.Value.CutPoint != null) {
-                    // making cuts costs energy
-                    snips += 1;
-                    energy -= 3;
-                    loses += 4;
-                    gains += 1;
-                } else {
-                    // propagating cuts gain you some energy
-                    snaps += 1;
-                    if (!done) energy += 1;
-                    gains += 1;
-                }
+                // breaking connectors gain you some energy
+                if (!done) energy += energyGainPerConnectorBroken;
+                gains += energyGainPerConnectorBroken;
 
-                // show new total quantities
-                SnapsLabel.Text = String.Format("Snaps: {0}", snaps);
-                SnipsLabel.Text = String.Format("Snips: {0}", snips);
+                // but making cuts costs energy
+                if (e.Value.CutPoint != null) {
+                    energy -= energyLossForCutting;
+                    loses += energyLossForCutting;
+                }
             }), game.Life);
             
             // track times
