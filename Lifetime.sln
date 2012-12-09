@@ -5,11 +5,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lifetime", "Lifetime\Lifeti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeTest", "LifetimeTest\LifetimeTest.csproj", "{B448C282-D446-4624-9A42-7B2CCFA517EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleSimple", "LifetimeExample\LifetimeExampleSimple.csproj", "{9DB14478-561D-4B6F-8919-F5E9D26B4978}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleSimple", "LifetimeExampleSimple\LifetimeExampleSimple.csproj", "{9DB14478-561D-4B6F-8919-F5E9D26B4978}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleGame", "LifetimeExample2\LifetimeExampleGame.csproj", "{669BABBC-C9D1-4726-8F0C-1F979C15F5CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleGame", "LifetimeExampleGame\LifetimeExampleGame.csproj", "{669BABBC-C9D1-4726-8F0C-1F979C15F5CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleGameTest", "ExampleTest\LifetimeExampleGameTest.csproj", "{B3E0CBA9-00D1-4372-BDFE-A6D81531BEB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifetimeExampleGameTest", "LifetimeExampleGameTest\LifetimeExampleGameTest.csproj", "{B3E0CBA9-00D1-4372-BDFE-A6D81531BEB0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

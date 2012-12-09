@@ -59,7 +59,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LifetimeExample2\LifetimeExampleGame.csproj">
+    <ProjectReference Include="..\LifetimeExampleGame\LifetimeExampleGame.csproj">
       <Project>{669babbc-c9d1-4726-8f0c-1f979c15f5cd}</Project>
       <Name>LifetimeExampleGame</Name>
     </ProjectReference>
