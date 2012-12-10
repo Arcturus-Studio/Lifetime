@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Strilanc.Util;
+using TwistedOak.Util;
 
 [TestClass]
 public class LifetimeUtilitiesTest {

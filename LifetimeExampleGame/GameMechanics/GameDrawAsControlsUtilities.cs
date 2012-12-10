@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using SnipSnap.Mathematics;
-using Strilanc.Util;
+using TwistedOak.Util;
 using LineSegment = SnipSnap.Mathematics.LineSegment;
 
 namespace SnipSnap {

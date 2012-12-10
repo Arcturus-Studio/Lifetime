@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Strilanc.Util {
+namespace TwistedOak.Util {
     /// <summary>
     /// Exposes a lifetime that permanently transitions from mortal to dead when the managing DisposableLifetime instance is disposed.
     /// When a DisposableLifetime is garbage collected without being disposed, the exposed lifetime becomes immortal.

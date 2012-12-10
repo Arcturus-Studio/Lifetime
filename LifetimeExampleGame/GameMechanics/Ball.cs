@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows;
-using Strilanc.Util;
+using TwistedOak.Util;
 
 namespace SnipSnap {
     public class Ball {

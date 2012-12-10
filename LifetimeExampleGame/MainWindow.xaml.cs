@@ -5,7 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using SnipSnap.Mathematics;
-using Strilanc.Util;
+using TwistedOak.Util;
 
 namespace SnipSnap {
     public partial class MainWindow {

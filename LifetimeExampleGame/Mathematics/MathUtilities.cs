@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Strilanc.Util;
+using TwistedOak.Util;
 
 namespace SnipSnap.Mathematics {
     ///<summary>Utility methods for working with numbers and related concepts.</summary>

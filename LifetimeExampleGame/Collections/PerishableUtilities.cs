@@ -4,7 +4,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Linq;
 
-namespace Strilanc.Util {
+namespace TwistedOak.Util {
     ///<summary>Utility methods related to perishables and perishable collections.</summary>
     public static class PerishableUtilities {
         ///<summary>Feeds observed items into a new perishable collection, stopping if a given lifetime ends.</summary>

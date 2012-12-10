@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Strilanc.Util;
+using TwistedOak.Util;
 
 [TestClass]
 public class DisposableLifetimeTest {

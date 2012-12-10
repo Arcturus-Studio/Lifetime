@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive;
 
-namespace Strilanc.Util {
+namespace TwistedOak.Util {
     ///<summary>A collection where added items are automatically removed when they perish.</summary>
     public sealed class PerishableCollection<T> {
         private sealed class Link {
