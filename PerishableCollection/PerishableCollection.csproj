@@ -8,7 +8,7 @@
     <ProjectGuid>{7541343D-44B8-49E3-8C2A-0F2618A3B11E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PerishableCollection</RootNamespace>
+    <RootNamespace>TwistedOak.Collections</RootNamespace>
     <AssemblyName>PerishableCollection</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Profile7</TargetFrameworkProfile>

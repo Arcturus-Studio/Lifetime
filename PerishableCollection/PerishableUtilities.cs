@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Linq;
+using System.Reactive.Subjects;
 using TwistedOak.Util;
 
 namespace TwistedOak.Collections {
@@ -58,7 +59,6 @@ namespace TwistedOak.Collections {
                 observer.OnNext(0);
                 Action tryComplete = () => {
                     if (isSourceComplete && (completeWhenSourceCompletes || count == 0)) {
-                        d.Dispose();
                         observer.OnCompleted();
                     }
                 };
@@ -107,9 +107,10 @@ namespace TwistedOak.Collections {
             if (keySelector == null) throw new ArgumentNullException("keySelector");
 
             return new AnonymousObservable<Perishable<KeyValuePair<TKey, IObservable<Perishable<TVal>>>>>(observer => {
-                var d = new DisposableLifetime();
+                var subLife = new DisposableLifetime();
                 var groupMap = new Dictionary<TKey, PerishableGroup<TVal>>(keyEquality ?? EqualityComparer<TKey>.Default);
                 var syncRoot = new object();
+                var completion = new Subject<Perishable<TVal>>();
                 collection.Subscribe(
                     item => {
                         var key = keySelector(item.Value);
@@ -131,7 +132,12 @@ namespace TwistedOak.Collections {
                             new Perishable<KeyValuePair<TKey, IObservable<Perishable<TVal>>>>(
                                 new KeyValuePair<TKey, IObservable<Perishable<TVal>>>(
                                     key,
-                                    group.Collection.AsObservable()),
+                                    new AnonymousObservable<Perishable<TVal>>(obs => {
+                                        var groupSubLife = new DisposableLifetime();
+                                        group.Collection.AsObservable().Subscribe(obs.OnNext, groupSubLife.Lifetime);
+                                        completion.Subscribe(obs.OnNext, obs.OnError, obs.OnCompleted, groupSubLife.Lifetime);
+                                        return groupSubLife;
+                                    })),
                                 group.LifetimeSource.Lifetime));
 
                         // add the item to its group
@@ -147,13 +153,18 @@ namespace TwistedOak.Collections {
                                     groupMap.Remove(key);
                                 }
                                 group.LifetimeSource.EndLifetime();
-                            },
-                            d.Lifetime);
+                            });
                     },
-                    observer.OnError,
-                    observer.OnCompleted,
-                    d.Lifetime);
-                return d;
+                    ex => {
+                        completion.OnError(ex);
+                        observer.OnError(ex);
+                    },
+                    () => {
+                        completion.OnCompleted();
+                        observer.OnCompleted();
+                    },
+                    subLife.Lifetime);
+                return subLife;
             });
         }
         private sealed class PerishableGroup<TVal> {
