@@ -120,7 +120,7 @@
       <Name>Lifetime</Name>
     </ProjectReference>
     <ProjectReference Include="..\PerishableCollection\PerishableCollection.csproj">
-      <Project>{9b0f558a-ff30-4984-9ce7-0f7c5cd4b727}</Project>
+      <Project>{7541343d-44b8-49e3-8c2a-0f2618a3b11e}</Project>
       <Name>PerishableCollection</Name>
     </ProjectReference>
   </ItemGroup>
