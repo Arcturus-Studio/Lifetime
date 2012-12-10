@@ -6,6 +6,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using SnipSnap.Mathematics;
 using TwistedOak.Util;
+using TwistedOak.Collections;
 
 namespace SnipSnap {
     public partial class MainWindow {

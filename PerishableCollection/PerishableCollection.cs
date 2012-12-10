@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive;
+using TwistedOak.Util;
 
-namespace TwistedOak.Util {
-    ///<summary>A collection where added items are automatically removed when they perish.</summary>
+namespace TwistedOak.Collections {
+    /// <summary>
+    /// A thread-safe collection that supports both enumeration and observation, where added items are automatically removed when they perish.
+    /// Supports constant time addition and removal of items.
+    /// Useful for when you want to create projected or filtered views of a collection that support 'an item was removed' notifications in a nice way.
+    /// In particular, the pairing of items with lifetimes means the views don't have to worry about details like 'do I remove X_1 or X_2 when I find out that X was removed?'.
+    /// </summary>
     public sealed class PerishableCollection<T> {
         private sealed class Link {
             public Link Next;
@@ -14,6 +20,7 @@ namespace TwistedOak.Util {
         private event Action<Perishable<T>> OnItem;
         private readonly Link _root;
 
+        ///<summary>Creates a new empty perishable collection.</summary>
         public PerishableCollection() {
             this._root = new Link();
             _root.Next = _root.Prev = _root;

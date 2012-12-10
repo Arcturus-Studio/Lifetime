@@ -72,9 +72,6 @@
     </Compile>
     <Compile Include="GameMechanics\Ball.cs" />
     <Compile Include="GameMechanics\Connector.cs" />
-    <Compile Include="Collections\Perishable.cs" />
-    <Compile Include="Collections\PerishableCollection.cs" />
-    <Compile Include="Collections\PerishableUtilities.cs" />
     <Compile Include="GameMechanics\GameMechanicUtilities.cs" />
     <Compile Include="GameMechanics\GameDrawAsControlsUtilities.cs" />
     <Compile Include="GameMechanics\GameUtilities.cs" />
@@ -121,6 +118,10 @@
     <ProjectReference Include="..\Lifetime\Lifetime.csproj">
       <Project>{c5f0a258-0aa4-4644-ad4b-134811518025}</Project>
       <Name>Lifetime</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PerishableCollection\PerishableCollection.csproj">
+      <Project>{9b0f558a-ff30-4984-9ce7-0f7c5cd4b727}</Project>
+      <Name>PerishableCollection</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

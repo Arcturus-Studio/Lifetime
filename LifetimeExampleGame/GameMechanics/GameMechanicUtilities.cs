@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using SnipSnap.Mathematics;
 using TwistedOak.Util;
+using TwistedOak.Collections;
 
 namespace SnipSnap {
     public static class GameMechanicUtilities {
