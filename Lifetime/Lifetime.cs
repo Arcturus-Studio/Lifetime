@@ -38,7 +38,16 @@ namespace TwistedOak.Util {
         /// <summary>
         /// Registers an action to perform when this lifetime is dead.
         /// If a registration lifetime is given and becomes dead before this lifetime becomes dead, the registration is cancelled.
+        /// If the lifetime is already dead, the callback is run synchronously.
         /// </summary>
+        /// <param name="action">
+        /// The callback to be run when the lifetime is dead.
+        /// </param>
+        /// <param name="registrationLifetime">
+        /// Determines when/if the WhenDead callback registration is cancelled, meaning the callback will not be run.
+        /// The registration is cancelled when the registration lifetime dies.
+        /// Defaults to an immortal lifetime.
+        /// </param>
         public void WhenDead(Action action, Lifetime registrationLifetime = default(Lifetime)) {
             if (action == null) throw new ArgumentNullException("action");
             var s = Soul;
@@ -54,13 +63,20 @@ namespace TwistedOak.Util {
         /// All dead lifetimes are congruent.
         /// Two initially non-congruent lifetimes can become congruent by ending up in the same non-mortal state.
         /// </summary>
+        /// <param name="other">The lifetime that this lifetime is being compared to.</param>
         public bool IsCongruentTo(Lifetime other) {
             if (Equals(this, other)) return true;
             var consistentPhase = Soul.Phase;
             return consistentPhase != Phase.Mortal && consistentPhase == other.Soul.Phase;
         }
 
-        ///<summary>Returns a cancellation token that is cancelled if the lifetime ends.</summary>
+        ///<summary>Returns a cancellation token that is cancelled when the lifetime ends.</summary>
+        /// <remarks>
+        /// Technically this should be an explicit conversion, because cancellation tokens curently don't handle 'becoming immotal'.
+        /// A lifetime converted to a token and back will be stuck mortal if the original becomes immortal, instead of properly tracking it.
+        /// However, this often only affects garbage collection instead of visible behavior, and interop with tokens should be painless.
+        /// I think the trade-off is worth it.
+        /// </remarks>
         public static implicit operator CancellationToken(Lifetime lifetime) {
             if (lifetime.IsImmortal) return default(CancellationToken);
             
@@ -68,8 +84,18 @@ namespace TwistedOak.Util {
             lifetime.WhenDead(source.Cancel);
             return source.Token;
         }
+        ///<summary>Returns a lifetime that ends when the CancellationToken is cancelled.</summary>
+        public static implicit operator Lifetime(CancellationToken token) {
+            if (!token.CanBeCanceled) return Immortal;
+            if (token.IsCancellationRequested) return Dead;
+            
+            var source = new LifetimeSource();
+            token.Register(source.EndLifetime);
+            return source.Lifetime;
+        }
 
         ///<summary>Determines if the other lifetime has the same source.</summary>
+        /// <param name="other">The lifetime that this lifetime is being compared to.</param>
         public bool Equals(Lifetime other) {
             return Equals(Soul, other.Soul);
         }

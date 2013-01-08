@@ -80,6 +80,20 @@ public class LifetimeAndSourceTest {
             return ct;
         });
     }
+    [TestMethod]
+    public void FromCancellationToken() {
+        ((Lifetime)default(CancellationToken)).IsImmortal.AssertIsTrue();
+        ((Lifetime)CancellationToken.None).IsImmortal.AssertIsTrue();
+
+        // dead on cancel
+        var doomed = new CancellationTokenSource();
+        Lifetime dt = doomed.Token;
+        dt.IsMortal.AssertIsTrue();
+        doomed.Cancel();
+        dt.IsDead.AssertIsTrue();
+        // already dead when already cancelled
+        ((Lifetime)doomed.Token).IsDead.AssertIsTrue();
+    }
 
     [TestMethod]
     public void Equality() {
