@@ -43,31 +43,31 @@ public class LifetimeExchangerTest {
 
     [TestMethod]
     public void ExchangerConcurrency() {
-        var repeats = 20;
-        foreach (var repeat in Enumerable.Range(0, repeats)) {
+        var repeats = 5;
+        foreach (var _ in Enumerable.Range(0, repeats)) {
             var n = 0;
             var exchanger = new LifetimeExchanger();
             TestUtil.ConcurrencyTest(
                 threadCount: 4,
-                callbackCount: 10000,
+                callbackCount: 3000,
                 repeatedWork: (t, i) => {
                     exchanger.ActiveLifetime.WhenDead(() => Interlocked.Increment(ref n));
                     exchanger.StartNextAndEndPreviousLifetime();
                 });
-            n.AssertEquals(10000*4);
+            n.AssertEquals(3000 * 4);
         }
     }
 
     [TestMethod]
     public void ExchangerRaces() {
         // the goal of this test is to try to trigger a race condition in how lifetime subscription lists are handled
-        var repeats = 20;
-        foreach (var repeat in Enumerable.Range(0, repeats)) {
+        var repeats = 5;
+        foreach (var _ in Enumerable.Range(0, repeats)) {
             var n = 0;
             var exchangers = new[] {new LifetimeExchanger(), new LifetimeExchanger()};
             TestUtil.ConcurrencyTest(
                 threadCount: 4,
-                callbackCount: 10000,
+                callbackCount: 3000,
                 repeatedWork: (t, i) => {
                     // callback run races against callback remove
                     exchangers[0].ActiveLifetime.WhenDead(() => Interlocked.Increment(ref n), exchangers[1].ActiveLifetime);
