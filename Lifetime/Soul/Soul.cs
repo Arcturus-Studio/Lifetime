@@ -10,23 +10,20 @@ namespace TwistedOak.Util.Soul {
         /// Returns a soul permanently stuck in the given phase.
         /// A permanently mortal soul is considered to be immortal.
         /// </summary>
-        public static ISoul AsPermanentSoul(this Phase phase) {
-            return phase == Phase.Dead 
-                 ? DeadSoul.Instance 
+        public static ISoul AsPermanentSoul(this Phase phase)
+            => phase == Phase.Dead
+                 ? DeadSoul.Instance
                  : ImmortalSoul.Instance;
-        }
         /// <summary>
         /// Returns a lifetime permanently stuck in the given phase.
         /// A permanently mortal soul is considered to be immortal.
         /// </summary>
-        public static Lifetime AsPermanentLifetime(this Phase phase) {
-            return new Lifetime(phase.AsPermanentSoul());
-        }
+        public static Lifetime AsPermanentLifetime(this Phase phase) => new Lifetime(phase.AsPermanentSoul());
         ///<summary>Returns a lifetime for the given soul, collapsing it to a simpler soul when possible.</summary>
         public static Lifetime AsCollapsingLifetime(this ISoul soul) {
             // avoid any wrapping if possible
-            var p = soul.Phase;
-            if (p != Phase.Mortal) return p.AsPermanentLifetime();
+            var phase = soul.Phase;
+            if (phase != Phase.Mortal) return phase.AsPermanentLifetime();
 
             return new Lifetime(new CollapsingSoul(soul));
         }
@@ -60,7 +57,10 @@ namespace TwistedOak.Util.Soul {
             };
         }
 
-        ///<summary>Registers a callback to the dependent soul that only occurs if the necessary soul doesn't die first, ensuring everything is cleaned up properly.</summary>
+        /// <summary>
+        /// Registers a callback to the dependent soul that only occurs if the necessary soul doesn't die first,
+        /// ensuring everything is cleaned up properly.
+        /// </summary>
         public static RegistrationRemover DependentRegister(this ISoul soul, Action action, ISoul necessarySoul) {
             if (soul == null) throw new ArgumentNullException("soul");
             if (action == null) throw new ArgumentNullException("action");
@@ -91,7 +91,7 @@ namespace TwistedOak.Util.Soul {
 
         ///<summary>Combines two souls by using a custom function to combine their phases.</summary>
         public static ISoul Combine(this ISoul soul1, ISoul soul2, Func<Phase, Phase, Phase> phaseCombiner) {
-            Func<Phase> getPhase = () => phaseCombiner(soul1.Phase, soul2.Phase);
+            Phase getPhase() => phaseCombiner(soul1.Phase, soul2.Phase);
             return new AnonymousSoul(
                 getPhase,
                 action => {

@@ -10,14 +10,10 @@ namespace TwistedOak.Util {
     public sealed class DisposableLifetime : IDisposable {
         private readonly LifetimeSource _source = new LifetimeSource();
         ///<summary>The lifetime that transitions from mortal to dead when the managing DisposableLifetime is disposed.</summary>
-        public Lifetime Lifetime { get { return _source.Lifetime; } }
+        public Lifetime Lifetime => _source.Lifetime;
         ///<summary>Transitions the exposed lifetime from mortal to dead.</summary>
-        public void Dispose() {
-            _source.EndLifetime();
-        }
+        public void Dispose() => _source.EndLifetime();
         ///<summary>Returns a text representation of the disposable lifetime's current state.</summary>
-        public override string ToString() {
-            return _source.ToString();
-        }
+        public override string ToString() => _source.ToString();
     }
 }

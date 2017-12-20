@@ -11,9 +11,9 @@ namespace TwistedOak.Util {
     [DebuggerDisplay("{ToString()}")]
     public sealed class LifetimeSource {
         private readonly MortalSoul _soul = new MortalSoul();
-        
-        /// <summary>The lifetime exposed and managed by the lifetime source.</summary>
-        public Lifetime Lifetime { get; private set; }
+
+        ///<summary>The lifetime exposed and managed by the lifetime source.</summary>
+        public Lifetime Lifetime { get; }
 
         ///<summary>Creates a new lifetime source managing a new initially mortal lifetime.</summary>
         public LifetimeSource() {
@@ -45,8 +45,6 @@ namespace TwistedOak.Util {
         }
 
         ///<summary>Returns a text representation of the lifetime source's current state.</summary>
-        public override string ToString() {
-            return Lifetime.ToString();
-        }
+        public override string ToString() => Lifetime.ToString();
     }
 }

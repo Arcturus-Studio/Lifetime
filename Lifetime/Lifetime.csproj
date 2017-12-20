@@ -6,8 +6,8 @@
     <PackageId>TwistedOak.Util.Lifetime</PackageId>
     <Version>1.0.3</Version>
     <Authors>Craig Gidney</Authors>
-    <Company>--company</Company>
-    <Product>--product</Product>
+    <Company>Twisted Oak Studios</Company>
+    <Product></Product>
     <Description>Lifetime (improved CancellationToken)
 
 A small library that implements an improved version of System.Threading.CancellationToken with support for removable registrations, to allow for garbage collection in the presence of long-lived tokens, plus some related utilities.

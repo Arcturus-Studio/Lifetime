@@ -30,7 +30,7 @@ namespace TwistedOak.Util.Soul {
                 Phase = newPhase;
 
                 // callbacks
-                callbacks = _callbacks == null ? null : _callbacks.EnumerateOthers().ToArray();
+                callbacks = _callbacks?.EnumerateOthers().ToArray();
                 _callbacks = null;
             }
             if (callbacks != null)
@@ -54,7 +54,8 @@ namespace TwistedOak.Util.Soul {
                 }
 
                 // add callback for when finished
-                if (_callbacks == null) _callbacks = DoublyLinkedNode<Action>.CreateEmptyCycle();
+                if (_callbacks == null)
+                    _callbacks = DoublyLinkedNode<Action>.CreateEmptyCycle();
                 weakNode = new WeakReference(_callbacks.Prepend(action));
             }
 
