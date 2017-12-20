@@ -11,3 +11,8 @@ TestResults/*
 *.suo
 *.user
 _ReSharper.*
+.vs/
+*.nupkg
+**/packages/*
+*.nuget.props
+*.nuget.targets

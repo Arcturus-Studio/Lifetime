@@ -2,10 +2,9 @@
 using System.Threading;
 using TwistedOak.Util;
 
-public static class Program {
-    private static void WriteLine(this string text, params object[] arg) {
-        Console.WriteLine(text, arg);
-    }
+public static class Program
+{
+    private static void WriteLine(this string text, params object[] arg) => Console.WriteLine(text, arg);
     private static void Break() {
         Console.WriteLine("---");
         Console.ReadLine();
@@ -120,7 +119,7 @@ public static class Program {
         new Action(() => {
             // register many callbacks with closures containing large amounts of memory be run when the lifetime/token ends/cancels
             // (these callbacks will never run; the sources are collected)
-            for (var i = 0; i < 2000; i++) {
+            for(var i = 0; i < 2000; i++) {
                 var r = new byte[2000];
                 callbackRegistrar(
                     lostToken,

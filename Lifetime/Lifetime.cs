@@ -22,18 +22,20 @@ namespace TwistedOak.Util {
         /// </summary>
         public static readonly Lifetime Dead = new Lifetime(DeadSoul.Instance);
 
+        //Must default to ImmortalSould.Instance in property rather than using auto-prop and setting default
+        //in contructor so that default(Lifetime).Soul is ImmortalSoul.Instance not null
         private readonly ISoul _defSoul;
-        internal ISoul Soul { get { return _defSoul ?? ImmortalSoul.Instance; } }
+        internal ISoul Soul => _defSoul ?? ImmortalSoul.Instance;
         internal Lifetime(ISoul soul) {
-            this._defSoul = soul;
+            _defSoul = soul;
         }
 
-        /// <summary>Determines if this lifetime is still transiently mortal.</summary>
-        public bool IsMortal { get { return Soul.Phase == Phase.Mortal; } }
-        /// <summary>Determines if this lifetime is permanently immortal.</summary>
-        public bool IsImmortal { get { return Soul.Phase == Phase.Immortal; } }
-        /// <summary>Determines if this lifetime is permanently dead.</summary>
-        public bool IsDead { get { return Soul.Phase == Phase.Dead; } }
+        ///<summary>Determines if this lifetime is still transiently mortal.</summary>
+        public bool IsMortal => Soul.Phase == Phase.Mortal;
+        ///<summary>Determines if this lifetime is permanently immortal.</summary>
+        public bool IsImmortal => Soul.Phase == Phase.Immortal;
+        ///<summary>Determines if this lifetime is permanently dead.</summary>
+        public bool IsDead => Soul.Phase == Phase.Dead;
 
         /// <summary>
         /// Registers an action to perform when this lifetime is dead.
@@ -49,7 +51,7 @@ namespace TwistedOak.Util {
         /// Defaults to an immortal lifetime.
         /// </param>
         public void WhenDead(Action action, Lifetime registrationLifetime = default(Lifetime)) {
-            if (action == null) throw new ArgumentNullException("action");
+            if (action == null) throw new ArgumentNullException(nameof(action));
             var s = Soul;
             s.DependentRegister(
                 () => { if (s.Phase == Phase.Dead) action(); },
@@ -94,19 +96,13 @@ namespace TwistedOak.Util {
             return source.Lifetime;
         }
 
-        ///<summary>Determines if the other lifetime has the same source.</summary>
+        /// <summary>Determines if the other lifetime has the same source.</summary>
         /// <param name="other">The lifetime that this lifetime is being compared to.</param>
-        public bool Equals(Lifetime other) {
-            return Equals(Soul, other.Soul);
-        }
+        public bool Equals(Lifetime other) => Equals(Soul, other.Soul);
         ///<summary>Returns the hash code for this lifetime, based on its source.</summary>
-        public override int GetHashCode() {
-            return Soul.GetHashCode();
-        }
+        public override int GetHashCode() => Soul.GetHashCode();
         ///<summary>Determines if the other object is a lifetime with the same source.</summary>
-        public override bool Equals(object obj) {
-            return obj is Lifetime && Equals((Lifetime)obj);
-        }
+        public override bool Equals(object obj) => obj is Lifetime && Equals((Lifetime)obj);
         ///<summary>Returns a text representation of the lifetime's current state.</summary>
         public override string ToString() {
             if (Soul.Phase == Phase.Mortal) return "Alive";
